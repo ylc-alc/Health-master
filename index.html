@@ -68,11 +68,19 @@
         const MUSCLE_GROUPS = ["全身", "胸部", "背部", "肩部", "臀部", "大腿前側", "大腿後側", "腹部", "有氧"];
 
         const MEAL_PRESETS = [
-            { id: 'b1', name: "常規早餐", type: "早餐", items: "酸種麵包, 牛油, 無糖豆漿", cal: 290, pro: 11 },
+            { id: 'b1', name: "常規早餐A1", type: "早餐", items: "酸種麵包, 牛油, 無糖豆漿", cal: 290, pro: 11 },
+            { id: 'b2', name: "常規早餐A2", type: "早餐", items: "酸種麵包 (2片), 牛油 (1 tablespoon), 無糖豆漿 (200ml)", cal: 325, pro: 12 },
+            { id: 'b3', name: "常規早餐B1", type: "早餐", items: "老虎麵包 (2片), 牛油 (1 tablespoon), 無糖豆漿 (200ml)", cal: 415, pro: 13 },
+            { id: 'b4', name: "常規早餐B2", type: "早餐", items: "老虎麵包 (2片), peanut butter (1 tablespoon), 無糖豆漿 (200ml)", cal: 410, pro: 17 },
+            { id: 'b5', name: "常規早餐C1", type: "早餐", items: "老虎麵包 (1片), 牛油 (1 tablespoon), mayonnaise (1 tablespoon), 魚鬆 (2 tablespoon), 無糖豆漿 (200ml)", cal: 470, pro: 17.5 },
+            { id: 'b6', name: "常規早餐C2", type: "早餐", items: "老虎麵包 (2片), 牛油 (1 tablespoon), mayonnaise (1 tablespoon), 魚鬆 (2 tablespoon), 無糖豆漿 (200ml)", cal: 595, pro: 21 },
             { id: 'l1', name: "增肌午餐", type: "午餐", items: "番薯, 蒸蛋x3, 紅蘿蔔, 水果", cal: 497, pro: 22 },
             { id: 'd1', name: "高蛋白晚餐", type: "晚餐", items: "白飯, 椰菜, 雞腿/豬肉 (200g)", cal: 650, pro: 52 },
-            { id: 's1', name: "訓練零食", type: "零食", items: "香蕉 (中型)", cal: 105, pro: 1 }
+            { id: 's1', name: "訓練零食", type: "零食 / 單項", items: "香蕉 (中型)", cal: 105, pro: 1 },
+            { id: 's2', name: "補充飲品", type: "零食 / 單項", items: "無糖豆漿 (200ml)", cal: 70, pro: 7 }
         ];
+
+        const mealCategories = ["早餐", "午餐", "晚餐", "零食 / 單項"];
 
         const EXERCISE_LIBRARY = [
             { id: 1, name: "掌上壓", category: CATEGORIES.PUSH, muscles: ["胸部"], baseReps: 15, durationSec: 45, type: "BW", tips: "保持身體呈一直線，撐起時不鎖死手肘。", tempo: "2-2 節奏", level: 1 },
@@ -113,6 +121,7 @@
                 const saved = localStorage.getItem('health_master_v2');
                 return saved ? JSON.parse(saved) : { cal: 0, pro: 0, water: 0, meals: [] };
             });
+            const [activeMealCategory, setActiveMealCategory] = useState("早餐");
 
             // --- 訓練狀態 ---
             const [duration, setDuration] = useState(15);
@@ -440,24 +449,43 @@
                                         <p className="text-xl font-black text-blue-500">{dailyLog.water}</p>
                                     </div>
                                 </section>
-                                <section className="space-y-3">
-                                    <h3 className="text-[10px] font-black uppercase text-slate-400 px-3 tracking-widest">增肌餐單預設</h3>
-                                    {MEAL_PRESETS.map(p => (
-                                        <button key={p.id} onClick={() => addMeal(p)} className="w-full flex justify-between items-center p-6 bg-white rounded-[2.2rem] border border-emerald-50 shadow-sm active:bg-emerald-50 transition-all text-left">
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded uppercase">{p.type}</span>
-                                                    <p className="font-black text-sm italic">{p.name}</p>
+                                
+                                <section className="space-y-4">
+                                    <h3 className="text-[10px] font-black uppercase text-slate-400 px-3 tracking-widest">依餐別新增紀錄</h3>
+                                    
+                                    {/* 分類切換按鈕 */}
+                                    <div className="flex gap-2 px-1 overflow-x-auto scrollbar-hide pb-2">
+                                        {mealCategories.map(cat => (
+                                            <button 
+                                                key={cat}
+                                                onClick={() => setActiveMealCategory(cat)}
+                                                className={`px-4 py-2 rounded-xl text-xs font-black transition-all whitespace-nowrap ${activeMealCategory === cat ? 'bg-emerald-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500'}`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* 該分類下的餐單 */}
+                                    <div className="space-y-3">
+                                        {MEAL_PRESETS.filter(p => p.type === activeMealCategory).map(p => (
+                                            <button key={p.id} onClick={() => addMeal(p)} className="w-full flex justify-between items-center p-6 bg-white rounded-[2.2rem] border border-emerald-50 shadow-sm active:bg-emerald-50 transition-all text-left group">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded uppercase">{p.type}</span>
+                                                        <p className="font-black text-sm italic group-hover:text-emerald-700 transition-colors">{p.name}</p>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-400 font-medium leading-tight">{p.items}</p>
                                                 </div>
-                                                <p className="text-[10px] text-slate-400 font-medium leading-tight">{p.items}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs font-black text-slate-800">{p.cal} KCAL</p>
-                                                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-tighter">P: {p.pro}g</p>
-                                            </div>
-                                        </button>
-                                    ))}
+                                                <div className="text-right shrink-0">
+                                                    <p className="text-xs font-black text-slate-800">{p.cal} KCAL</p>
+                                                    <p className="text-[10px] font-bold text-orange-500 uppercase tracking-tighter">P: {p.pro}g</p>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </section>
+
                                 <section className="bg-emerald-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-emerald-200">
                                     <div className="flex justify-between items-center mb-6">
                                         <h3 className="font-black uppercase text-[10px] tracking-widest flex items-center gap-2">水分攝取紀錄</h3>
