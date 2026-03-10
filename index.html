@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Health Master - 您的專屬健身與營養助手</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            -webkit-tap-highlight-color: transparent; 
+            overscroll-behavior-y: contain;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 24px); }
+        .active-tab { color: #059669; transform: scale(1.1); } /* Emerald-600 */
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- 修正後的圖示組件 ---
+        const Icon = ({ name, size = 24, className = "" }) => {
+            const containerRef = useRef(null);
+
+            useEffect(() => {
+                let timer;
+                const renderIcon = () => {
+                    if (containerRef.current && window.lucide && window.lucide.icons[name]) {
+                        containerRef.current.innerHTML = ''; 
+                        try {
+                            const iconNode = window.lucide.createElement(window.lucide.icons[name]);
+                            iconNode.setAttribute('width', size);
+                            iconNode.setAttribute('height', size);
+                            if (className) {
+                                iconNode.setAttribute('class', `lucide lucide-${name.toLowerCase()} ${className}`);
+                            }
+                            containerRef.current.appendChild(iconNode);
+                        } catch (e) {
+                            console.error("Icon 渲染失敗:", e);
+                        }
+                    }
+                };
+
+                if (window.lucide) {
+                    renderIcon();
+                } else {
+                    timer = setInterval(() => {
+                        if (window.lucide) {
+                            renderIcon();
+                            clearInterval(timer);
+                        }
+                    }, 50);
+                }
+
+                return () => {
+                    if (timer) clearInterval(timer);
+                };
+            }, [name, size, className]);
+
+            return (
+                <span 
+                    ref={containerRef} 
+                    className="inline-flex items-center justify-center" 
+                    style={{ width: size, height: size }}
+                ></span>
+            );
+        };
+
+        // --- 設定與常數 ---
+        const TARGETS = { calories: 1700, protein: 75, water: 2500 };
+        const CATEGORIES = { PUSH: "推力", PULL: "拉力", LEGS: "腿部", CORE: "核心", CARDIO: "有氧" };
+        
+        const MEAL_PRESETS = [
+            { id: 'b1', name: "常規早餐", type: "早餐", items: "酸種麵包, 牛油, 無糖豆漿", cal: 290, pro: 11 },
+            { id: 'l1', name: "增肌午餐", type: "午餐", items: "番薯, 蒸蛋x3, 紅蘿蔔, 水果", cal: 497, pro: 22 },
+            { id: 'd1', name: "高蛋白晚餐", type: "晚餐", items: "白飯, 椰菜, 雞腿/豬肉 (200g)", cal: 650, pro: 52 },
+            { id: 's1', name: "訓練零食", type: "零食", items: "香蕉 (中型)", cal: 105, pro: 1 }
+        ];
+
+        const EXERCISE_LIBRARY = [
+            { id: 1, name: "掌上壓", category: CATEGORIES.PUSH, muscles: ["胸部"], baseReps: 15, durationSec: 45, type: "BW", tips: "保持身體呈一直線，撐起時不鎖死手肘。", tempo: "2-2 節奏", level: 1 },
+            { id: 21, name: "啞鈴肩推", category: CATEGORIES.PUSH, muscles: ["肩部"], baseReps: 12, durationSec: 50, type: "DB", tips: "坐姿核心收緊，啞鈴垂直向上推。", tempo: "2-2 節奏", level: 1 },
+            { id: 33, name: "啞鈴側平舉", category: CATEGORIES.PUSH, muscles: ["肩部"], baseReps: 15, durationSec: 45, type: "DB", tips: "微微低頭，手肘微彎，向兩側推開。", tempo: "2-2 節奏", level: 2 },
+            { id: 35, name: "啞鈴地板胸推", category: CATEGORIES.PUSH, muscles: ["胸部"], baseReps: 12, durationSec: 50, type: "DB", tips: "仰臥地上，手肘觸地即上推。", tempo: "2-2 節奏", level: 1 },
+            { id: 45, name: "阿諾肩推", category: CATEGORIES.PUSH, muscles: ["肩部"], baseReps: 15, durationSec: 60, type: "DB", tips: "旋轉手腕推起，精準刺激肩部。", tempo: "2-2 節奏", level: 3 },
+            { id: 46, name: "啞鈴地板飛鳥", category: CATEGORIES.PUSH, muscles: ["胸部"], baseReps: 20, durationSec: 60, type: "DB", tips: "像擁抱大樹，感受胸肌拉伸。", tempo: "2-2 節奏", level: 2 },
+            { id: 10, name: "啞鈴划船", category: CATEGORIES.PULL, muscles: ["背部"], baseReps: 20, durationSec: 50, type: "DB", tips: "手肘向後拉，感受背肌擠壓。", tempo: "2-2 節奏", level: 1 },
+            { id: 40, name: "啞鈴反向飛鳥", category: CATEGORIES.PULL, muscles: ["後肩"], baseReps: 20, durationSec: 60, type: "DB", tips: "俯身背挺直，雙臂向兩側打開。", tempo: "2-2 節奏", level: 2 },
+            { id: 41, name: "單臂啞鈴划船", category: CATEGORIES.PULL, muscles: ["背部"], baseReps: 15, durationSec: 60, type: "DB", tips: "單手支撐，專注單側背部發力。", tempo: "2-2 節奏", level: 3 },
+            { id: 42, name: "啞鈴二頭彎舉", category: CATEGORIES.PULL, muscles: ["手臂"], baseReps: 25, durationSec: 50, type: "DB", tips: "大臂貼緊身體，旋轉掌心向上。", tempo: "2-2 節奏", level: 1 },
+            { id: 43, name: "俯臥 W 字伸展", category: CATEGORIES.PULL, muscles: ["背部"], baseReps: 20, durationSec: 60, type: "BW", tips: "趴地將手呈 W 字抬起並向後夾。", tempo: "頂峰收縮", level: 1 },
+            { id: 44, name: "變節者划船", category: CATEGORIES.PULL, muscles: ["背部", "核心"], baseReps: 16, durationSec: 60, type: "DB", tips: "平板支撐姿勢，單手交替拉起。", tempo: "穩定控制", level: 3 },
+            { id: 3, name: "臀橋", category: CATEGORIES.LEGS, muscles: ["臀部"], baseReps: 30, durationSec: 60, type: "BW", tips: "腳跟踩穩，臀部夾緊向上頂。", tempo: "2-2 節奏", level: 1 },
+            { id: 4, name: "深蹲", category: CATEGORIES.LEGS, muscles: ["腿部"], baseReps: 25, durationSec: 60, type: "BW", tips: "重心在腳跟，背部挺直。", tempo: "2-2 節奏", level: 1 },
+            { id: 30, name: "高腳杯深蹲", category: CATEGORIES.LEGS, muscles: ["腿部"], baseReps: 12, durationSec: 60, type: "DB", tips: "雙手持鈴於胸前，下蹲至深處。", tempo: "2-2 節奏", level: 1 },
+            { id: 31, name: "羅馬尼亞硬拉", category: CATEGORIES.LEGS, muscles: ["腿後側"], baseReps: 12, durationSec: 60, type: "DB", tips: "臀部向後推，啞鈴沿腿下滑。", tempo: "2-2 節奏", level: 3 },
+            { id: 32, name: "啞鈴弓步蹲", category: CATEGORIES.LEGS, muscles: ["臀腿"], baseReps: 16, durationSec: 60, type: "DB", tips: "跨步向下蹲至 90 度。", tempo: "2-2 節奏", level: 3 },
+            { id: 34, name: "負重臀橋", category: CATEGORIES.LEGS, muscles: ["臀部"], baseReps: 15, durationSec: 50, type: "DB", tips: "啞鈴放胯部，強力頂起。", tempo: "2-2 節奏", level: 2 },
+            { id: 5, name: "平板支撐", category: CATEGORIES.CORE, muscles: ["核心"], baseReps: 1, durationSec: 45, isTimed: true, type: "BW", tips: "收緊核心，避免臀部過高。", tempo: "靜態支撐", level: 1 },
+            { id: 16, name: "手肘側平板", category: CATEGORIES.CORE, muscles: ["側腹"], baseReps: 1, durationSec: 45, isTimed: true, type: "BW", tips: "22秒語音提醒換邊。", tempo: "靜態支撐", level: 3 },
+            { id: 19, name: "死蟲式", category: CATEGORIES.CORE, muscles: ["深層核心"], baseReps: 20, durationSec: 60, type: "BW", tips: "下背緊貼地面，動作越慢越好。", tempo: "慢速控制", level: 1 },
+            { id: 2, name: "仰臥起坐", category: CATEGORIES.CORE, muscles: ["腹部"], baseReps: 20, durationSec: 60, type: "BW", tips: "捲起時吐氣，緩慢下放。", tempo: "2-2 節奏", level: 2 },
+            { id: 24, name: "單車式捲腹", category: CATEGORIES.CORE, muscles: ["側腹"], baseReps: 24, durationSec: 50, type: "BW", tips: "肘部碰對側膝蓋，腿伸直。", tempo: "動態旋轉", level: 2 },
+            { id: 60, name: "仰臥舉腿", category: CATEGORIES.CORE, muscles: ["下腹"], baseReps: 15, durationSec: 50, type: "BW", tips: "腿部伸直緩慢下放至不碰地。", tempo: "2-2 節奏", level: 2 },
+            { id: 6, name: "登山者", category: CATEGORIES.CARDIO, muscles: ["全身"], baseReps: 40, durationSec: 45, type: "BW", tips: "背部平坦，膝蓋靠近胸部。", tempo: "穩定頻率", level: 1 },
+            { id: 56, name: "開合跳", category: CATEGORIES.CARDIO, muscles: ["全身"], baseReps: 50, durationSec: 45, type: "BW", tips: "落地輕盈，保持呼吸。", tempo: "快速穩定", level: 1 },
+            { id: 57, name: "高抬腿", category: CATEGORIES.CARDIO, muscles: ["全身"], baseReps: 60, durationSec: 45, type: "BW", tips: "膝蓋抬至腰部，核心收緊。", tempo: "爆發頻率", level: 1 },
+            { id: 58, name: "負重陰影拳", category: CATEGORIES.CARDIO, muscles: ["肩部"], baseReps: 80, durationSec: 60, type: "DB", tips: "手持輕鈴出拳，不要鎖死肘部。", tempo: "控制力道", level: 2 },
+            { id: 61, name: "俯撐開合跳", category: CATEGORIES.CARDIO, muscles: ["核心"], baseReps: 30, durationSec: 45, type: "BW", tips: "平板姿勢雙腳跳開與併攏。", tempo: "連貫節奏", level: 2 },
+            { id: 62, name: "溜冰者", category: CATEGORIES.CARDIO, muscles: ["腿部"], baseReps: 30, durationSec: 45, type: "BW", tips: "左右側跳，保持平衡。", tempo: "流暢運動", level: 2 }
+        ];
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('workout');
+            const [dailyLog, setDailyLog] = useState(() => {
+                const saved = localStorage.getItem('health_master_v1');
+                return saved ? JSON.parse(saved) : { cal: 0, pro: 0, water: 0, meals: [] };
+            });
+
+            const [duration, setDuration] = useState(15);
+            const [routine, setRoutine] = useState(null);
+            const [isTraining, setIsTraining] = useState(false);
+            const [timeLeft, setTimeLeft] = useState(0);
+            const [activeExIdx, setActiveExIdx] = useState(0);
+            const [isResting, setIsResting] = useState(false);
+            const [level, setLevel] = useState(2);
+
+            useEffect(() => {
+                localStorage.setItem('health_master_v1', JSON.stringify(dailyLog));
+            }, [dailyLog]);
+
+            const speak = (text) => {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = 'zh-HK';
+                    u.rate = 1.1;
+                    window.speechSynthesis.speak(u);
+                }
+            };
+
+            const addMeal = (p) => {
+                setDailyLog(prev => ({
+                    ...prev,
+                    cal: prev.cal + p.cal,
+                    pro: prev.pro + p.pro,
+                    meals: [...prev.meals, p.name]
+                }));
+                speak(`已紀錄${p.name}`);
+            };
+
+            const generateRoutine = () => {
+                const count = Math.floor(duration / 1.5);
+                const pool = EXERCISE_LIBRARY.filter(ex => ex.level === level || ex.level === level - 1);
+                const shuffled = [...pool].sort(() => 0.5 - Math.random());
+                setRoutine({ exercises: shuffled.slice(0, count) });
+                setActiveTab('workout');
+                window.scrollTo(0, 0);
+            };
+
+            useEffect(() => {
+                if (!isTraining || timeLeft <= 0) {
+                    if (isTraining && timeLeft === 0) handleTransition();
+                    return;
+                }
+                const timer = setTimeout(() => {
+                    setTimeLeft(prev => prev - 1);
+                    const ex = routine.exercises[activeExIdx];
+                    if (!isResting && !ex.isTimed && ex.category !== CATEGORIES.CARDIO) {
+                        const beat = (timeLeft - 1) % 4;
+                        if (beat === 0) speak("落");
+                        if (beat === 2) speak("上");
+                    }
+                    if (!isResting && ex.name.includes("Side Plank") && timeLeft === 23) {
+                        speak("換邊！");
+                    }
+                    if (timeLeft === 10) {
+                        isResting ? speak("準備") : speak("最後十秒");
+                    }
+                }, 1000);
+                return () => clearTimeout(timer);
+            }, [timeLeft, isTraining, isResting]);
+
+            const handleTransition = () => {
+                const isLast = activeExIdx === routine.exercises.length - 1;
+                if (!isResting) {
+                    if (isLast) {
+                        setIsTraining(false);
+                        speak("訓練完成，今日做得非常出色！");
+                    } else {
+                        setIsResting(true);
+                        setTimeLeft(15);
+                        speak("深呼吸休息十五秒。");
+                    }
+                } else {
+                    setIsResting(false);
+                    const nextIdx = activeExIdx + 1;
+                    setActiveExIdx(nextIdx);
+                    const nextEx = routine.exercises[nextIdx];
+                    setTimeLeft(nextEx.isTimed ? 45 : 999);
+                    speak(`下一個動作：${nextEx.name}`);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col max-w-xl mx-auto bg-white shadow-2xl relative overflow-x-hidden">
+                    {/* Header - Emerald to Green Gradient */}
+                    <header className="bg-gradient-to-br from-emerald-600 to-green-800 p-6 pt-10 text-white shrink-0 shadow-lg">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h1 className="text-2xl font-black italic uppercase tracking-tighter leading-none">Health Master</h1>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded uppercase tracking-widest">30.5y · 41.5kg</span>
+                                    <span className="text-[10px] font-bold bg-orange-500 px-2 py-0.5 rounded uppercase tracking-widest">增肌模式</span>
+                                </div>
+                            </div>
+                            <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-xl border border-white/10">
+                                <Icon name="Activity" size={28} />
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Content Area */}
+                    <main className="flex-1 overflow-y-auto p-5 pb-32 scrollbar-hide">
+                        {activeTab === 'workout' && !isTraining && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <section className="bg-emerald-50/50 p-6 rounded-[2.5rem] border border-emerald-100 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-6 text-emerald-700 font-black">
+                                        <Icon name="Timer" size={20} />
+                                        <h2 className="uppercase text-xs tracking-widest">自定義訓練計畫</h2>
+                                    </div>
+                                    
+                                    <div className="space-y-8">
+                                        <div>
+                                            <div className="flex justify-between items-end mb-4 px-1">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">訓練等級 (Level)</label>
+                                                <span className="text-xs font-black text-emerald-600">Lvl {level}</span>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {[1, 2, 3].map(l => (
+                                                    <button key={l} onClick={() => setLevel(l)} className={`py-3 rounded-2xl font-black text-sm transition-all border-2 ${level === l ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-400'}`}>L{l}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div className="flex justify-between items-end mb-4 px-1">
+                                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">計畫時長 (Duration)</label>
+                                                <span className="text-sm font-black text-emerald-600 bg-emerald-100 px-4 py-1 rounded-full">{duration} MIN</span>
+                                            </div>
+                                            <input 
+                                                type="range" min="10" max="30" step="5" value={duration} 
+                                                onChange={e => setDuration(parseInt(e.target.value))} 
+                                                className="w-full h-2 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={generateRoutine}
+                                        className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black mt-10 shadow-2xl active:scale-95 transition-all uppercase italic tracking-widest text-sm flex items-center justify-center gap-3"
+                                    >
+                                        開始 2-2 節奏訓練 <Icon name="Zap" size={16} className="text-orange-400 fill-current" />
+                                    </button>
+                                </section>
+
+                                {routine && (
+                                    <div className="space-y-4 animate-in fade-in duration-700">
+                                        <div className="flex justify-between items-end px-3">
+                                            <h3 className="font-black italic uppercase text-slate-400 text-[10px] tracking-widest">今日動作清單</h3>
+                                            <button 
+                                                onClick={() => { 
+                                                    setIsTraining(true); 
+                                                    const first = routine.exercises[0];
+                                                    setTimeLeft(first.isTimed ? 45 : 999); 
+                                                    speak(`訓練開始。第一個動作：${first.name}`); 
+                                                }} 
+                                                className="bg-orange-500 text-white p-4 rounded-3xl shadow-xl shadow-orange-100 animate-pulse"
+                                            >
+                                                <Icon name="Play" size={24} />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {routine.exercises.map((ex, i) => (
+                                                <div key={i} className="bg-white p-5 rounded-[1.8rem] border border-emerald-50 flex justify-between items-center shadow-sm">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded-xl text-xs flex items-center justify-center font-black italic">{i+1}</div>
+                                                        <div>
+                                                            <p className="font-black text-sm text-slate-800 uppercase italic leading-tight">{ex.name}</p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{ex.category} · {ex.type}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-emerald-50 px-3 py-1 rounded-lg">
+                                                        <span className="text-xs font-mono font-black text-emerald-600">{ex.isTimed ? '45S' : `${ex.baseReps}X`}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {isTraining && (
+                            <div className="flex flex-col items-center py-6 animate-in zoom-in-95 duration-300 h-full justify-center text-center">
+                                <div className="mb-2 bg-emerald-100 text-emerald-700 px-4 py-1 rounded-full font-black text-[10px] uppercase tracking-widest">
+                                    {isResting ? "RESTING ~ 休息" : `EXERCISE ${activeExIdx + 1} / ${routine.exercises.length}`}
+                                </div>
+                                <h2 className="text-3xl sm:text-4xl font-black italic uppercase mb-10 text-slate-900 leading-tight px-6 min-h-[80px] flex items-center">
+                                    {isResting ? "準備下一個動作" : routine.exercises[activeExIdx].name}
+                                </h2>
+                                <div className="relative w-72 h-72 flex items-center justify-center mb-10">
+                                    <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="46" stroke="#f1f5f9" strokeWidth="4" fill="none" />
+                                        <circle 
+                                            cx="50" cy="50" r="46" 
+                                            stroke="#059669" strokeWidth="6" 
+                                            fill="none" strokeDasharray="289" 
+                                            strokeDashoffset={289 - (timeLeft / (isResting ? 15 : 45)) * 289} 
+                                            className="transition-all duration-1000 ease-linear" 
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <div className="flex flex-col items-center">
+                                        <div className="text-7xl font-black italic tracking-tighter text-slate-900 leading-none">
+                                            {routine.exercises[activeExIdx].isTimed || isResting ? timeLeft : routine.exercises[activeExIdx].baseReps}
+                                        </div>
+                                        {!isResting && !routine.exercises[activeExIdx].isTimed && (
+                                            <div className="text-xs font-black text-emerald-500 mt-2 uppercase tracking-widest animate-pulse">2-2 Tempo ON</div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-[2.5rem] w-full border border-emerald-100 mb-10 shadow-xl shadow-emerald-200/20">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">訓練要領 & 節奏</p>
+                                    <p className="font-bold italic text-slate-700 leading-relaxed mb-4">
+                                        {isResting ? `下一項：${routine.exercises[activeExIdx + 1]?.name || "最後拉伸"}` : routine.exercises[activeExIdx].tips}
+                                    </p>
+                                    {!isResting && (
+                                        <div className="bg-orange-50 py-2 px-6 rounded-full inline-block text-[10px] font-black text-orange-600 uppercase">
+                                            節奏: {routine.exercises[activeExIdx].tempo}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex gap-4 w-full px-2">
+                                    <button onClick={() => setIsTraining(false)} className="bg-slate-100 p-6 rounded-[2rem] text-slate-400 active:bg-slate-200 transition-colors"><Icon name="X" size={28} /></button>
+                                    <button onClick={() => setTimeLeft(0)} className="flex-1 bg-slate-900 text-white rounded-[2rem] font-black italic tracking-widest uppercase shadow-2xl active:scale-95 transition-all text-sm">{routine.exercises[activeExIdx].isTimed || isResting ? "跳過階段" : "我完成了！"}</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'nutrition' && (
+                            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <section className="grid grid-cols-3 gap-3">
+                                    <div className="bg-white p-5 rounded-[2rem] text-center border border-emerald-50 shadow-sm">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">CAL</p>
+                                        <p className="text-xl font-black text-emerald-600 leading-none">{dailyLog.cal}</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-[2rem] text-center border border-emerald-50 shadow-sm">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">PRO (G)</p>
+                                        <p className="text-xl font-black text-orange-600 leading-none">{dailyLog.pro}</p>
+                                    </div>
+                                    <div className="bg-white p-5 rounded-[2rem] text-center border border-emerald-50 shadow-sm">
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">WATER</p>
+                                        <p className="text-xl font-black text-blue-500 leading-none">{dailyLog.water}</p>
+                                    </div>
+                                </section>
+
+                                <section className="space-y-3">
+                                    <h3 className="text-[10px] font-black uppercase text-slate-400 px-3 tracking-widest">增肌餐單預設</h3>
+                                    {MEAL_PRESETS.map(p => (
+                                        <button key={p.id} onClick={() => addMeal(p)} className="w-full flex justify-between items-center p-6 bg-white rounded-[2.2rem] border border-emerald-50 shadow-sm active:bg-emerald-50 transition-all text-left group">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded uppercase">{p.type}</span>
+                                                    <p className="font-black text-sm italic group-hover:text-emerald-700 transition-colors">{p.name}</p>
+                                                </div>
+                                                <p className="text-[10px] text-slate-400 font-medium leading-tight">{p.items}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-slate-800">{p.cal} KCAL</p>
+                                                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-tighter">Protein: {p.pro}g</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </section>
+
+                                <section className="bg-emerald-600 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-emerald-200">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="font-black uppercase text-[10px] tracking-widest flex items-center gap-2">水分攝取紀錄</h3>
+                                        <span className="text-xs font-bold bg-white/20 px-4 py-1 rounded-full">{dailyLog.water} / {TARGETS.water}ML</span>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        {[250, 500].map(v => (
+                                            <button key={v} onClick={() => { setDailyLog(prev => ({ ...prev, water: prev.water + v })); speak(`加${v}毫升`); }} className="flex-1 bg-white text-emerald-600 py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">+{v}ML</button>
+                                        ))}
+                                    </div>
+                                </section>
+                            </div>
+                        )}
+
+                        {activeTab === 'report' && (
+                            <div className="space-y-8 py-4 animate-in fade-in duration-500">
+                                <div className="text-center px-6">
+                                    <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">今日體態報告</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 leading-relaxed">追求卓越的身型線條與健康的熱量盈餘</p>
+                                </div>
+                                <div className="space-y-6">
+                                    {[
+                                        { label: '熱量達成率 (增肌基礎)', val: dailyLog.cal, target: TARGETS.calories, color: 'bg-emerald-600', icon: 'Zap' },
+                                        { label: '蛋白質目標 (肌肉修復)', val: dailyLog.pro, target: TARGETS.protein, color: 'bg-orange-500', icon: 'Target' },
+                                        { label: '水分補充 (代謝動力)', val: dailyLog.water, target: TARGETS.water, color: 'bg-blue-500', icon: 'Droplets' }
+                                    ].map(s => (
+                                        <div key={s.label} className="bg-white p-7 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <Icon name={s.icon} size={14} className="text-slate-300" />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{s.label}</span>
+                                                </div>
+                                                <span className={`text-[10px] font-black ${s.val >= s.target ? 'text-emerald-600' : 'text-slate-400'}`}>{s.val} / {s.target}</span>
+                                            </div>
+                                            <div className="h-4 bg-slate-100 rounded-full overflow-hidden p-1">
+                                                <div className={`${s.color} h-full rounded-full transition-all duration-1000 ease-out shadow-sm`} style={{ width: `${Math.min(100, (s.val/s.target)*100)}%` }}></div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="bg-emerald-900 text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                                    <h3 className="text-xs font-black uppercase tracking-widest mb-6 text-emerald-400 flex items-center gap-2"><Icon name="Info" size={14} /> 專家分析 Advice</h3>
+                                    <p className="text-lg font-bold italic leading-relaxed text-emerald-100">
+                                        {dailyLog.cal < TARGETS.calories 
+                                            ? "您目前的熱量攝取不足以支持高效增肌。建議睡前額外補充 200ml 無糖豆漿及少量堅果，確保代謝環境適合肌肉修復。" 
+                                            : "恭喜！您已成功達成熱量盈餘。這將為明天的 2-2 節奏訓練提供充足的能源。請確保充足睡眠。"}
+                                    </p>
+                                </div>
+                                <button onClick={() => { localStorage.removeItem('health_master_v1'); window.location.reload(); }} className="w-full text-[10px] font-black text-slate-300 uppercase tracking-widest py-8">重置紀錄 (Clear Progress)</button>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Bottom Nav */}
+                    {!isTraining && (
+                        <nav className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-white/90 backdrop-blur-2xl border-t border-slate-100 flex justify-around p-5 pb-10 z-50 rounded-t-[2.5rem] shadow-lg">
+                            {[
+                                { id: 'workout', label: '訓練', icon: 'Dumbbell' },
+                                { id: 'nutrition', label: '飲食', icon: 'Utensils' },
+                                { id: 'report', label: '報告', icon: 'PieChart' }
+                            ].map(tab => (
+                                <button 
+                                    key={tab.id} onClick={() => { setActiveTab(tab.id); window.scrollTo(0,0); }} 
+                                    className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${activeTab === tab.id ? 'text-emerald-600 scale-110' : 'text-slate-300'}`}
+                                >
+                                    <div className={`p-2 rounded-xl ${activeTab === tab.id ? 'bg-emerald-50' : 'bg-transparent'}`}>
+                                        <Icon name={tab.icon} size={24} />
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest">{tab.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+                    )}
+                </div>
+            );
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
