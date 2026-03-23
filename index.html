@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A personalised 4-week home workout planner. 4 days per week, mat and one 1.5 kg dumbbell. Tracks progress in the browser with no account needed." />
+  <meta name="theme-color" content="#e4572e" />
+  <meta property="og:title" content="Personalised 4-Week Workout Planner" />
+  <meta property="og:description" content="Home workouts with a mat and one 1.5 kg dumbbell. 4 weeks, 4 days per week, with progress tracking." />
+  <title>Personalised 4-Week Workout Planner</title>
+  <style>
+    :root {
+      --bg: #fff5f1;
+      --bg-soft: #fff0ea;
+      --card: #ffffff;
+      --text: #2b1c18;
+      --muted: #7a6259;
+      --line: #efd2c7;
+      --accent: #e4572e;
+      --accent-dark: #c9421b;
+      --accent-soft: #ffe1d8;
+      --accent-soft-2: #fff1eb;
+      --success: #1f8a4c;
+      --success-soft: #eaf8ef;
+      --locked: #a48a81;
+      --locked-soft: #f5ece7;
+      --shadow: 0 10px 28px rgba(151, 61, 29, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, var(--bg) 0%, #fffaf8 100%);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    .hero {
+      background: linear-gradient(135deg, #fff7f3 0%, #fff1ea 50%, #ffffff 100%);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero-grid, .top-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .hero-grid { grid-template-columns: 2fr 1.08fr; }
+    .top-grid { grid-template-columns: 1.35fr 0.95fr; margin-bottom: 18px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 22px rgba(143, 54, 21, 0.05);
+    }
+    .subtle { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent) 0%, #ef6a3e 100%);
+      color: #fff;
+      min-height: 44px;
+      box-shadow: 0 8px 20px rgba(228, 87, 46, 0.22);
+    }
+    .btn:hover { filter: brightness(1.02); }
+    .btn.secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--accent-dark);
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .btn:disabled {
+      background: var(--locked-soft);
+      color: var(--locked);
+      border: 1px solid var(--line);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn-row.full-width .btn { width: 100%; justify-content: center; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fffaf8;
+    }
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 4px;
+      color: var(--accent-dark);
+    }
+    .planner-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    .planner-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 14px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .session-tile {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      padding: 14px;
+      min-height: 248px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .session-tile.current {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .session-tile.completed {
+      border-color: #9fe0b6;
+      background: #f9fffb;
+    }
+    .session-tile.locked {
+      background: #fdf9f7;
+      opacity: 0.78;
+    }
+    .status {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .status.current { background: var(--accent-soft); color: var(--accent-dark); }
+    .status.completed { background: var(--success-soft); color: var(--success); }
+    .status.locked { background: var(--locked-soft); color: var(--locked); }
+    .tile-title { font-weight: 800; margin: 4px 0; }
+    .tile-meta { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+    .checkmark {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--line);
+      font-size: 16px;
+      font-weight: 800;
+      margin-right: 8px;
+      flex: 0 0 auto;
+      color: var(--muted);
+    }
+    .checkmark.done {
+      border-color: var(--success);
+      color: var(--success);
+      background: #fff;
+    }
+    .history-chip {
+      display:inline-block;
+      margin-top:8px;
+      font-size:12px;
+      color: var(--muted);
+      background: var(--bg-soft);
+      border-radius:999px;
+      padding:5px 9px;
+    }
+    .player-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(28, 18, 16, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 10;
+    }
+    .player-overlay.active { display: flex; }
+    .player {
+      width: min(900px, 100%);
+      max-height: min(92vh, 920px);
+      height: min(92vh, 920px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #fff;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+    }
+    .player-body {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 32px 0 16px;
+    }
+    .player-body-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .player-cue {
+      font-size: 15px;
+      line-height: 1.45;
+      margin-bottom: 4px;
+    }
+    .player-round-meta {
+      margin-top: 2px;
+    }
+    .next-up-box {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: var(--accent-soft-2);
+      border: 1px solid var(--line);
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .next-up-box strong {
+      color: var(--text);
+    }
+    .timer {
+      font-size: 58px;
+      font-weight: 900;
+      line-height: 1;
+      margin: 10px 0 8px;
+      color: var(--accent-dark);
+    }
+    .phase {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent-dark);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .exercise-name {
+      font-size: 28px;
+      font-weight: 900;
+      margin: 8px 0;
+    }
+    .progressbar {
+      height: 10px;
+      background: #f1dfd8;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 14px 0 10px;
+    }
+    .progressbar > div {
+      height: 100%;
+      background: linear-gradient(135deg, var(--accent) 0%, #f07b52 100%);
+      width: 0%;
+    }
+    .list { margin: 0; padding-left: 18px; }
+    .list li { margin-bottom: 6px; }
+    .small { font-size: 13px; }
+    .footer-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .player-footer-sticky .footer-controls {
+      flex-wrap: nowrap;
+      gap: 8px;
+      margin-top: 0;
+    }
+    .player-footer-sticky .footer-controls .btn {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 11px 8px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .admin-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .wakelock-badge {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--success);
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--success-soft);
+      border: 1px solid #9fe0b6;
+    }
+    .wakelock-badge.active { display: inline-flex; }
+    .wakelock-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .timer.countdown-flash {
+      animation: flash-red 0.18s ease-out;
+    }
+    @keyframes flash-red {
+      0% { color: var(--accent); transform: scale(1.06); }
+      100% { color: var(--accent-dark); transform: scale(1); }
+    }
+    .data-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .data-actions .btn {
+      font-size: 13px;
+      padding: 9px 14px;
+      min-height: 38px;
+    }
+    .import-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 9px 14px;
+      min-height: 38px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #fff;
+      color: var(--text);
+    }
+    .import-label:hover { background: #fdf8f5; }
+    #importFileInput { display: none; }
+    .current-title {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .settings-card {
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:16px;
+      padding-top:14px;
+      border-top:1px solid var(--line);
+    }
+    .switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select:none;
+      font-weight:700;
+    }
+    .switch input { display:none; }
+    .slider {
+      width: 48px;
+      height: 28px;
+      background: #dfc7be;
+      border-radius: 999px;
+      position: relative;
+      transition: 0.2s ease;
+      flex:0 0 auto;
+    }
+    .slider::after {
+      content:'';
+      position:absolute;
+      top:3px;
+      left:3px;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:#fff;
+      transition:0.2s ease;
+      box-shadow:0 1px 3px rgba(0,0,0,0.18);
+    }
+    .switch input:checked + .slider {
+      background: var(--accent);
+    }
+    .switch input:checked + .slider::after {
+      transform: translateX(20px);
+    }
+    .detail-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    .detail-box {
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+      background:#fffaf8;
+    }
+    .detail-box h3 { margin-bottom:8px; }
+    .detail-list { margin:0; padding-left:18px; }
+    .detail-list li { margin-bottom:6px; }
+    .badge {
+      display:inline-block;
+      margin-right:8px;
+      margin-bottom:8px;
+      padding:5px 9px;
+      border-radius:999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      font-size:12px;
+      font-weight:700;
+    }
+    .completion-box {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      background: linear-gradient(135deg, #fff9f6 0%, #fff2ec 100%);
+    }
+    .callout {
+      border: 1px solid var(--line);
+      background: var(--accent-soft-2);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .mini-grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .adjustment-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #fff0ea;
+      color: var(--accent-dark);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .planner-scroll-note {
+      display: none;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .session-tile { scroll-snap-align: start; }
+    .player-header {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #fff;
+      padding-bottom: 12px;
+      margin: -20px -20px 0;
+      padding: 20px 20px 12px;
+      border-bottom: 1px solid var(--line);
+      border-top-left-radius: 24px;
+      border-top-right-radius: 24px;
+    }
+    .player-footer-sticky {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      background: linear-gradient(180deg, rgba(255,255,255,0.86) 0%, #fff 16%);
+      margin: 0 -20px -20px;
+      padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--line);
+    }
+    .player .footer-controls { margin-top: 0; }
+    .compact-select {
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 700;
+      min-width: 220px;
+    }
+.prestart-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 14px;
+    }
+    .prestart-box {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      background: linear-gradient(180deg, #fffdfc 0%, #fff7f4 100%);
+    }
+    .prestart-list {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+    .prestart-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+    .prestart-actions .btn {
+      flex: 1 1 180px;
+    }
+    body.overlay-open {
+      overflow: hidden;
+      touch-action: none;
+    }
+    button, select { touch-action: manipulation; }
+
+    @media (max-width: 960px) {
+      .detail-grid, .mini-grid, .hero-grid, .top-grid { grid-template-columns: 1fr; }
+      .container { padding: 14px; }
+      .hero, .card { padding: 16px; }
+      .hero { border-radius: 20px; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .stat { padding: 12px 10px; }
+      .stat-value { font-size: 22px; }
+      .timer { font-size: 46px; }
+      .exercise-name { font-size: 24px; }
+      .planner-row { grid-template-columns: repeat(4, minmax(252px, 82vw)); gap: 12px; padding-bottom: 10px; }
+      .planner-scroll-note { display: block; }
+      .player-overlay { padding: 0; align-items: flex-end; }
+      .player {
+        width: 100%;
+        max-height: 100dvh;
+        height: 100dvh;
+        border-radius: 24px 24px 0 0;
+        padding: 16px;
+        overscroll-behavior: contain;
+      }
+      .player-header {
+        margin: -16px -16px 0;
+        padding: 14px 16px 12px;
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+      }
+      .player-footer-sticky {
+        margin: 0 -16px -16px;
+        padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+      }
+      .compact-select { width: 100%; min-width: 0; }
+      .settings-card > div:last-child { width: 100%; }
+      .prestart-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 12px; }
+      .hero, .card, .session-tile { padding: 14px; }
+      h1 { font-size: 28px; line-height: 1.15; }
+      h2 { font-size: 24px; line-height: 1.2; }
+      h3 { font-size: 20px; line-height: 1.25; }
+      .pill { font-size: 11px; padding: 6px 9px; }
+      .btn, .btn.secondary, .btn.ghost { width: 100%; }
+      .player-footer-sticky .footer-controls .btn { width: auto; }
+      .btn-row { width: 100%; }
+      .btn-row.full-width .btn { width: 100%; }
+      .planner-row { grid-template-columns: repeat(4, minmax(260px, 88vw)); gap: 10px; }
+      .session-tile { min-height: 224px; }
+      .timer { font-size: 42px; }
+      .exercise-name { font-size: 22px; }
+      .player { border-radius: 20px 20px 0 0; }
+      .player-header { border-top-left-radius: 20px; border-top-right-radius: 20px; }
+      .footer-controls { gap: 8px; }
+      .current-title { align-items: flex-start; }
+      .stats { gap: 8px; }
+      .stat { border-radius: 12px; }
+      .stat-value { font-size: 20px; }
+      .subtle, .small { line-height: 1.4; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1>4-Week Personalised Workout Planner</h1>
+          <p class="subtle">Built for a mat, one 1.5 kg dumbbell, and short home sessions. Each workout follows a fixed weekly sequence, with the main block designed for about 25 to 30 minutes. Warm-up and cool-down sit outside that main block.</p>
+          <div>
+            <span class="pill">4 weeks</span>
+            <span class="pill">4 training days per week</span>
+            <span class="pill">Main block 25 to 30 min</span>
+            <span class="pill">No bench or chair needed</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Programme rules</h3>
+          <ul class="list small">
+            <li>Use the single <strong>Start workout</strong> button in the next workout card.</li>
+            <li>The planner shows one week at a time to keep the page lighter.</li>
+            <li>Future days stay locked until the current session is completed.</li>
+            <li>The programme moves by sequence, not by calendar date, so missed days do not break it.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="top-grid">
+      <section class="card" id="currentCard"></section>
+      <section class="card">
+        <h3>Progress</h3>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="doneCount">0</div>
+            <div class="subtle">Workouts completed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="remainingCount">16</div>
+            <div class="subtle">Workouts remaining</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="weekCount">1</div>
+            <div class="subtle">Visible week</div>
+          </div>
+        </div>
+        <div class="footer-controls" style="margin-top:16px;">
+          <button class="btn secondary" id="resetPlanBtn">Reset programme</button>
+        </div>
+        <div class="settings-card">
+          <div>
+            <h4 style="margin-bottom:6px;">Training mode</h4>
+            <div class="subtle small">Standard mode keeps the full progression. Easier mode reduces density. You can also choose a lighter day-state for low energy or joint-sensitive days.</div>
+          </div>
+          <label class="switch" for="easierModeToggle">
+            <input type="checkbox" id="easierModeToggle">
+            <span class="slider"></span>
+            <span>Easier mode</span>
+          </label>
+        </div>
+        <div class="settings-card" style="margin-top:12px;">
+          <div>
+            <h4 style="margin-bottom:6px;">Today's adjustment</h4>
+            <div class="subtle small">Choose a lighter day-state without changing the programme sequence.</div>
+          </div>
+          <div>
+            <select id="dayStateSelect" class="compact-select">
+              <option value="standard">Standard day</option>
+              <option value="low_energy">Low energy day</option>
+              <option value="joint_friendly">Joint-friendly day</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-card">
+          <div>
+            <h4 style="margin-bottom:6px;">Audio cues</h4>
+            <div class="subtle small">Plays a soft beep on each segment transition and a countdown for the last 3 seconds of every block.</div>
+          </div>
+          <label class="switch" for="audioToggle">
+            <input type="checkbox" id="audioToggle" checked>
+            <span class="slider"></span>
+            <span>Sound on</span>
+          </label>
+        </div>
+        <div class="data-actions">
+          <button class="btn secondary" id="exportBtn">Export progress</button>
+          <label class="import-label" for="importFileInput">Import progress<input type="file" id="importFileInput" accept=".json"></label>
+        </div>
+        <div class="admin-note" id="modeNote">Progress and settings are stored only in this browser using local storage.</div>
+        <div style="margin-top:8px;"><span class="wakelock-badge" id="wakelockBadge"><span class="wakelock-dot"></span>Screen awake</span></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="planner-header">
+        <div>
+          <h2 style="margin-bottom:4px;" id="plannerTitle">Week 1 planner</h2>
+          <p class="subtle" style="margin-bottom:0;">Only the current week is shown. Completed sessions get a tick. Locked sessions cannot be opened early.</p>
+          <div class="planner-scroll-note">Swipe left to right to see all four days on mobile.</div>
+        </div>
+      </div>
+      <div class="planner-row" id="planner"></div>
+    </section>
+  </div>
+
+  <div class="player-overlay" id="detailsOverlay">
+    <div class="player">
+      <div class="player-header" style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="min-width:0;flex:1 1 180px;">
+          <div class="phase">Session details</div>
+          <h2 id="detailsTitle" style="margin-bottom:4px;">Workout details</h2>
+          <div class="subtle" id="detailsMeta"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <button class="btn" id="detailsStartBtn" style="display:none;text-transform:uppercase;letter-spacing:0.04em;font-weight:900;padding:11px 22px;">Start Now</button>
+          <button class="btn secondary" id="closeDetailsBtn" style="padding:11px 18px;">Close</button>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-box">
+          <h3>Session design</h3>
+          <div id="detailsDesign" class="small"></div>
+          <h3 style="margin-top:16px;">Coaching focus</h3>
+          <div id="detailsFocus" class="small subtle"></div>
+          <h3 style="margin-top:16px;">Progression aim</h3>
+          <ul id="detailsProgression" class="detail-list small"></ul>
+          <h3 style="margin-top:16px;">Smart substitutions</h3>
+          <div class="mini-grid">
+            <div>
+              <div class="small" style="font-weight:700;margin-bottom:4px;">Low-energy day</div>
+              <ul id="detailsSubsEnergy" class="detail-list small"></ul>
+            </div>
+            <div>
+              <div class="small" style="font-weight:700;margin-bottom:4px;">Joint-friendly swaps</div>
+              <ul id="detailsSubsJoint" class="detail-list small"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="detail-box">
+          <h3>Warm-up</h3>
+          <ul id="detailsWarmup" class="detail-list small"></ul>
+          <h3 style="margin-top:16px;">Main block exercises</h3>
+          <ol id="detailsExercises" class="detail-list small"></ol>
+          <h3 style="margin-top:16px;">Cool-down</h3>
+          <ul id="detailsCooldown" class="detail-list small"></ul>
+          <div id="detailsEasier" class="callout small subtle" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="player-overlay" id="prestartOverlay">
+    <div class="player">
+      <div class="player-header" style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div class="phase">Ready to train</div>
+          <h2 id="prestartTitle" style="margin-bottom:4px;">Today's workout</h2>
+          <div class="subtle" id="prestartMeta"></div>
+        </div>
+        <button class="btn secondary" id="closePrestartBtn">Close</button>
+      </div>
+      <div class="prestart-grid">
+        <div class="prestart-box">
+          <h3 style="margin-bottom:8px;">Session summary</h3>
+          <div id="prestartSummary" class="small"></div>
+          <div id="prestartAdjustment" class="callout small subtle"></div>
+          <div class="prestart-actions">
+            <button class="btn" id="beginWorkoutBtn">Start now</button>
+            <button class="btn secondary" id="prestartDetailsBtn">View full details</button>
+          </div>
+        </div>
+        <div class="prestart-box">
+          <h3 style="margin-bottom:8px;">Main set preview</h3>
+          <ol id="prestartPreview" class="prestart-list small"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="player-overlay" id="playerOverlay">
+    <div class="player">
+      <div class="player-header" style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:nowrap;">
+        <div style="min-width:0;">
+          <div class="phase" id="playerPhaseLabel">Warm-up</div>
+          <div style="font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="playerWorkoutTitle">Workout title</div>
+        </div>
+        <button class="btn secondary" id="closePlayerBtn" style="flex-shrink:0;padding:8px 14px;font-size:13px;min-height:36px;">Close</button>
+      </div>
+
+      <div class="player-body" id="playerMain">
+        <div class="player-body-inner">
+          <div class="timer" id="timerText">00:40</div>
+          <div class="exercise-name" id="exerciseName">Exercise</div>
+          <div class="subtle player-cue" id="exerciseCue">Cue</div>
+          <div class="progressbar"><div id="phaseProgress"></div></div>
+          <div class="small subtle player-round-meta" id="segmentMeta">Round 1 of 4</div>
+          <div class="next-up-box" id="nextUpBox" style="display:none;"></div>
+        </div>
+      </div>
+      <div class="player-footer-sticky" id="playerFooterSticky">
+        <div class="footer-controls">
+          <button class="btn" id="playPauseBtn">Start</button>
+          <button class="btn secondary" id="skipBtn">Skip</button>
+          <button class="btn secondary" id="completeBtn">Mark workout complete</button>
+        </div>
+      </div>
+
+      <div class="completion-box" id="completionBox" style="display:none;">
+        <div class="phase">Workout completed</div>
+        <h2 id="completionTitle" style="margin-bottom:6px;">Nice work</h2>
+        <p class="subtle" id="completionText" style="margin-bottom:10px;">Your session has been logged.</p>
+        <div class="callout small" id="completionNext"></div>
+        <div class="player-footer-sticky">
+          <div class="footer-controls">
+            <button class="btn" id="closeCompletionBtn">Close and continue</button>
+            <button class="btn secondary" id="repeatSessionBtn">Repeat this session</button>
+            <button class="btn ghost" id="completionEasierBtn">Turn easier mode on</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'personalisedWorkoutPlan_v8';
+
+    const workoutTemplates = {
+      full_body_foundation: {
+        id: 'full_body_foundation',
+        title: 'Full Body Foundation',
+        focus: 'Full body strength',
+        mainDuration: '26 min',
+        totalDuration: '31 to 33 min',
+        coachingFocus: 'Build repeatable movement quality first. Use slow lowering and smooth breathing rather than chasing speed.',
+        progression: ['Learn the six-move circuit and keep every rep tidy.', 'Finish all four rounds before trying to speed up transitions.', 'Aim to feel steady rather than exhausted by the final round.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 35-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Tempo squat to shorter range', 'Floor press with both hands on one dumbbell', 'March instead of fast-feet finish'],
+          joint: ['Wall sit instead of repeated squat if knees are irritated', 'Dead bug heel tap instead of full dead bug if lower back feels tired', 'Wall push-up pattern instead of floor press set-up if shoulder comfort is limited']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 45, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Relax the shoulders and breathe steadily.' },
+          { name: 'Arm circles', seconds: 40, cue: 'Move both directions and stay controlled.' },
+          { name: 'Bodyweight squat', seconds: 40, cue: 'Sit back and keep the chest lifted.' },
+          { name: 'Hip hinge drill', seconds: 40, cue: 'Push the hips back and keep the spine long.' },
+          { name: 'Dead bug prep', seconds: 40, cue: 'Brace the core and move slowly.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Shake out the body and get ready.' }
+        ],
+        exercises: [
+          { name: 'Bodyweight squat', cue: '3 seconds down, stand tall.' },
+          { name: 'Floor press', cue: 'Press smoothly and keep wrists stacked.' },
+          { name: 'Bent-over dumbbell row', cue: 'Hips back, elbow toward hip.' },
+          { name: 'Glute bridge', cue: 'Drive through heels and squeeze at the top.' },
+          { name: 'Dead bug', cue: 'Keep lower back softly pressed to the mat.' },
+          { name: 'Fast feet march', cue: 'Quick feet, quiet landing.' }
+        ],
+        cooldown: [
+          'Walk around the room for 30 to 60 seconds.',
+          'Child’s pose or long reach: 30 seconds.',
+          'Hip flexor stretch: 30 seconds each side.',
+          'Chest opener and slow breathing: 30 to 60 seconds.'
+        ]
+      },
+      cardio_core_foundation: {
+        id: 'cardio_core_foundation',
+        title: 'Cardio and Core Foundation',
+        focus: 'Low-impact cardio and core',
+        mainDuration: '26 min',
+        totalDuration: '31 to 33 min',
+        coachingFocus: 'Keep impact low but trunk tension high. The cardio work should stay controlled enough that posture does not collapse.',
+        progression: ['Build rhythm before intensity.', 'Keep the core braced during planks and bicycle crunches.', 'Use round four to hold technique under mild fatigue.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 35-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Step jack instead of wider low-impact jack', 'March with knee lift instead of fast feet', 'Forearm plank from knees'],
+          joint: ['Hands-elevated shoulder tap alternative against a wall if wrists are sensitive', 'Dead bug instead of bicycle crunch if neck gets tired', 'Standing core brace hold instead of mountain climber if shoulders are irritated']
+        },
+        equipment: 'Mat only',
+        settings: { rounds: 4, work: 45, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Build the heart rate gradually.' },
+          { name: 'Torso rotations', seconds: 40, cue: 'Turn gently through the rib cage.' },
+          { name: 'Bodyweight good morning', seconds: 40, cue: 'Hands on ribs, hips back.' },
+          { name: 'Alternating knee lift', seconds: 40, cue: 'Stay upright and controlled.' },
+          { name: 'Plank walkout prep', seconds: 40, cue: 'Move only as far as control allows.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Breathe in through nose and out through mouth.' }
+        ],
+        exercises: [
+          { name: 'Low-impact jack', cue: 'Step side to side, reach the arms high.' },
+          { name: 'Mountain climber slow drive', cue: 'Drive one knee at a time with control.' },
+          { name: 'Bicycle crunch', cue: 'Exhale as the elbow reaches across.' },
+          { name: 'Plank shoulder tap', cue: 'Keep hips as still as possible.' },
+          { name: 'Fast feet march', cue: 'Quick feet, quiet landing.' },
+          { name: 'Forearm plank', cue: 'Long spine, steady breathing.' }
+        ],
+        cooldown: [
+          'Walk around the room for 30 to 60 seconds.',
+          'Supine twist: 30 seconds each side.',
+          'Kneeling side reach: 30 seconds each side.',
+          'Slow nasal breathing for 30 to 60 seconds.'
+        ]
+      },
+      lower_body_foundation: {
+        id: 'lower_body_foundation',
+        title: 'Lower Body and Glutes Foundation',
+        focus: 'Legs and glutes',
+        mainDuration: '27 min',
+        totalDuration: '32 to 34 min',
+        coachingFocus: 'Use tempo and holds to make the legs work since external load is light.',
+        progression: ['Keep squat depth consistent across all rounds.', 'Use the glutes at lockout instead of arching the lower back.', 'Treat the final round as controlled endurance, not sloppy speed.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 35-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Squat to chair-height imaginary target instead of deeper tempo squat', 'Bridge hold instead of bridge pulse', 'Calf raise only bodyweight'],
+          joint: ['Static split squat hold to short range if lunges irritate the knees', 'Hip hinge wall-tap pattern instead of Romanian deadlift if back feels tired', 'Seated ankle pumps instead of prolonged wall sit if knees are aggravated']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 45, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Lift the knees and warm the ankles.' },
+          { name: 'Hip circles', seconds: 40, cue: 'Open the hips gently.' },
+          { name: 'Bodyweight squat', seconds: 40, cue: 'Spread the floor with the feet.' },
+          { name: 'Reverse lunge reach', seconds: 40, cue: 'Stay balanced and use a short range.' },
+          { name: 'Glute bridge prep', seconds: 40, cue: 'Find full hip extension.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Set posture before the main block.' }
+        ],
+        exercises: [
+          { name: 'Tempo squat', cue: '3 seconds down, 1 second hold.' },
+          { name: 'Reverse lunge alternating', cue: 'Short step back, front heel grounded.' },
+          { name: 'Glute bridge pulse', cue: 'Small pulses at the top.' },
+          { name: 'Romanian deadlift with dumbbell', cue: 'Hips back, feel hamstrings load.' },
+          { name: 'Wall sit or squat hold', cue: 'Stay tall through the chest.' },
+          { name: 'Standing calf raise', cue: 'Rise smoothly and pause at the top.' }
+        ],
+        cooldown: [
+          'Walk around gently for 30 to 60 seconds.',
+          'Quad stretch: 30 seconds each side.',
+          'Figure-four glute stretch: 30 seconds each side.',
+          'Hamstring fold or long-leg reach: 30 to 60 seconds.'
+        ]
+      },
+      upper_body_foundation: {
+        id: 'upper_body_foundation',
+        title: 'Upper Body and Core Foundation',
+        focus: 'Push, pull and trunk control',
+        mainDuration: '26 min',
+        totalDuration: '31 to 33 min',
+        coachingFocus: 'The 1.5 kg dumbbell is too light for pure strength, so use tempo and pauses to increase demand.',
+        progression: ['Keep ribs down during presses so the trunk does part of the work.', 'Use clean scapular control on rows and raises.', 'Finish the fast punch block with posture still tall.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 35-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Wall push-up instead of kneeling push-up', 'Seated press pattern without load instead of lateral raise on a tired day', 'Standing march with punches instead of full fast punch block'],
+          joint: ['Wall-supported bird dog reach if wrists dislike floor loading', 'Two-arm row instead of longer single-arm emphasis if lower back is sensitive', 'Smaller range lateral raise if shoulders pinch']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 45, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March with arm swing', seconds: 40, cue: 'Stay relaxed and open the chest.' },
+          { name: 'Shoulder roll and reach', seconds: 40, cue: 'Move through a comfortable range.' },
+          { name: 'Wall push-up prep', seconds: 40, cue: 'Brace the trunk and keep elbows soft.' },
+          { name: 'Prone Y raise prep', seconds: 40, cue: 'Lift lightly from upper back.' },
+          { name: 'Bird dog prep', seconds: 40, cue: 'Long line from fingertips to heel.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Shake out arms and set posture.' }
+        ],
+        exercises: [
+          { name: 'Kneeling push-up or wall push-up', cue: 'Body moves as one unit.' },
+          { name: 'Single-arm floor press', cue: 'Keep ribs down and press steadily.' },
+          { name: 'Bent-over row', cue: 'Pause briefly at the top.' },
+          { name: 'Lateral raise', cue: 'Lift to shoulder height with soft elbows.' },
+          { name: 'Bird dog', cue: 'Reach long and resist twisting.' },
+          { name: 'Fast punch combo', cue: 'Quick hands, relaxed shoulders.' }
+        ],
+        cooldown: [
+          'Walk around gently for 30 to 60 seconds.',
+          'Chest opener: 30 seconds.',
+          'Cross-body shoulder stretch: 30 seconds each side.',
+          'Thread-the-needle or seated reach: 30 to 60 seconds.'
+        ]
+      },
+      full_body_progression: {
+        id: 'full_body_progression',
+        title: 'Full Body Progression',
+        focus: 'Full body strength and density',
+        mainDuration: '28 min',
+        totalDuration: '33 to 35 min',
+        coachingFocus: 'Density goes up here. Keep the trunk stable while the upper body works for longer bouts.',
+        progression: ['Accept slower reps to keep shoulder position clean.', 'Use the pause on rows and presses to compensate for the light load.', 'Treat week 4 as consolidation rather than a max-effort week.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 40-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Bodyweight squat instead of squat to calf raise', 'Bridge without press instead of floor press with bridge', 'March instead of low-impact fast feet'],
+          joint: ['Split squat to shorter range instead of reverse lunge to knee drive if knees are sensitive', 'Dead bug heel tap instead of dead bug with reach', 'Supported hip hinge row stance if back needs more stability']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 50, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Bring the heart rate up gradually.' },
+          { name: 'Arm sweep and reach', seconds: 40, cue: 'Reach overhead and pull elbows down.' },
+          { name: 'Tempo squat prep', seconds: 40, cue: 'Find depth that keeps balance.' },
+          { name: 'Hip hinge drill', seconds: 40, cue: 'Keep neck neutral.' },
+          { name: 'Dead bug prep', seconds: 40, cue: 'Slow and controlled.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Prepare for a denser main set.' }
+        ],
+        exercises: [
+          { name: 'Squat to calf raise', cue: 'Stand tall and finish on the toes.' },
+          { name: 'Floor press with bridge', cue: 'Hold glutes up as you press.' },
+          { name: 'Row with 1-second squeeze', cue: 'Squeeze shoulder blade toward spine.' },
+          { name: 'Reverse lunge to knee drive', cue: 'Control the balance on the way up.' },
+          { name: 'Dead bug with reach', cue: 'Move opposite arm and leg slowly.' },
+          { name: 'Low-impact fast feet', cue: 'Quick, light steps and stay upright.' }
+        ],
+        cooldown: [
+          'Walk slowly for 30 to 60 seconds.',
+          'Hip flexor stretch: 30 seconds each side.',
+          'Glute stretch: 30 seconds each side.',
+          'Long exhale breathing for 30 to 60 seconds.'
+        ]
+      },
+      cardio_core_progression: {
+        id: 'cardio_core_progression',
+        title: 'Cardio and Core Progression',
+        focus: 'Conditioning and trunk endurance',
+        mainDuration: '28 min',
+        totalDuration: '33 to 35 min',
+        coachingFocus: 'Progression comes from longer work intervals and better control of anti-extension core work.',
+        progression: ['Keep breathing calm during the harder plank and hold variations.', 'Raise intensity with arm speed and knee drive, not impact.', 'In week 4, keep technique clean in the final 50-second efforts.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 40-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Step jack instead of quicker jacks', 'Standing knee drive instead of faster floor-based work', 'Short plank hold from knees'],
+          joint: ['Dead bug instead of bicycle crunch if neck or hip flexors dominate', 'Wall shoulder tap instead of floor tap if wrists are sensitive', 'Slow marching brace hold instead of mountain climber if shoulders are irritable']
+        },
+        equipment: 'Mat only',
+        settings: { rounds: 4, work: 50, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Light and rhythmic.' },
+          { name: 'Torso rotation with reach', seconds: 40, cue: 'Stay long through the spine.' },
+          { name: 'Alternating knee lift', seconds: 40, cue: 'Brace the trunk lightly.' },
+          { name: 'Walkout prep', seconds: 40, cue: 'Only go as low as control allows.' },
+          { name: 'Plank prep', seconds: 40, cue: 'Push the floor away.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Get ready for longer work blocks.' }
+        ],
+        exercises: [
+          { name: 'Step jack with overhead reach', cue: 'Stay tall and move crisply.' },
+          { name: 'Mountain climber controlled pace', cue: 'Drive knees under hips without bouncing.' },
+          { name: 'Bicycle crunch with pause', cue: 'Pause on each cross-body reach.' },
+          { name: 'Forearm plank knee tap', cue: 'Keep glutes lightly engaged.' },
+          { name: 'Fast feet with arm drive', cue: 'Use the arms to raise intensity without impact.' },
+          { name: 'Hollow hold or tuck hold', cue: 'Short range is fine if the back stays comfortable.' }
+        ],
+        cooldown: [
+          'Walk slowly for 30 to 60 seconds.',
+          'Supine twist: 30 seconds each side.',
+          'Child’s pose: 30 seconds.',
+          'Long exhale breathing for 30 to 60 seconds.'
+        ]
+      },
+      lower_body_progression: {
+        id: 'lower_body_progression',
+        title: 'Lower Body and Glutes Progression',
+        focus: 'Leg endurance and glute strength',
+        mainDuration: '29 min',
+        totalDuration: '34 to 36 min',
+        coachingFocus: 'Use pauses, pulses and unilateral work to make light loading more demanding.',
+        progression: ['Keep the knee tracking clean even as fatigue rises.', 'Use the bridge and wall-sit work to build local muscular endurance.', 'Week 4 is still control-focused, not a sprint.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 40-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Reduced-range split squat', 'Bridge hold instead of pulse plus hold', 'Bodyweight hip hinge without load'],
+          joint: ['Static staggered squat instead of split squat if knees prefer more stability', 'Glute bridge instead of wall sit if front knee pressure builds', 'Single-leg calf raise changed to two-leg raise if Achilles feel loaded']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 50, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March in place', seconds: 40, cue: 'Wake up the ankles and hips.' },
+          { name: 'Hip circles', seconds: 40, cue: 'Stay tall and smooth.' },
+          { name: 'Tempo squat prep', seconds: 40, cue: 'Control the lowering phase.' },
+          { name: 'Glute bridge prep', seconds: 40, cue: 'Drive evenly through both feet.' },
+          { name: 'Calf raise prep', seconds: 40, cue: 'Rise with control.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Prepare for a denser leg block.' }
+        ],
+        exercises: [
+          { name: 'Tempo squat with pulse', cue: 'Add a small pulse at the bottom.' },
+          { name: 'Split squat alternating', cue: 'Keep front foot grounded.' },
+          { name: 'Weighted glute bridge hold', cue: 'Hold and squeeze at the top.' },
+          { name: 'Romanian deadlift with 2-second pause', cue: 'Pause in the stretch position.' },
+          { name: 'Wall sit with heel lift', cue: 'Lift heels briefly without losing posture.' },
+          { name: 'Single-leg calf raise assisted', cue: 'Use light wall support if needed.' }
+        ],
+        cooldown: [
+          'Walk around gently for 30 to 60 seconds.',
+          'Quad stretch: 30 seconds each side.',
+          'Figure-four glute stretch: 30 seconds each side.',
+          'Hamstring reach and slow breathing: 30 to 60 seconds.'
+        ]
+      },
+      upper_body_progression: {
+        id: 'upper_body_progression',
+        title: 'Upper Body and Core Progression',
+        focus: 'Upper body endurance and trunk control',
+        mainDuration: '28 min',
+        totalDuration: '33 to 35 min',
+        coachingFocus: 'With light equipment, intensity comes from longer time under tension and fewer relaxed moments.',
+        progression: ['Keep shoulder blades controlled on every press and row.', 'Use pauses to make the 1.5 kg dumbbell meaningful.', 'Treat the final week as crisp execution, not grinding effort.'],
+        easierModeNote: 'Easier mode uses 3 rounds, 40-second work periods, 20-second rests and 75 seconds between rounds.',
+        substitutions: {
+          energy: ['Wall push-up instead of kneeling push-up', 'Reduced-range lateral raise', 'March and punch instead of longer punch finisher'],
+          joint: ['Floor press with both hands if one-arm stability feels too awkward', 'Prone W raise instead of row if lower back wants a break', 'Dead bug instead of bird dog if wrists are sensitive']
+        },
+        equipment: 'Mat and one 1.5 kg dumbbell',
+        settings: { rounds: 4, work: 50, rest: 15, roundRest: 60, cooldown: 180 },
+        warmup: [
+          { name: 'March with arm swing', seconds: 40, cue: 'Loosen the upper body.' },
+          { name: 'Shoulder circle and reach', seconds: 40, cue: 'Move with control.' },
+          { name: 'Wall push-up prep', seconds: 40, cue: 'Brace the trunk.' },
+          { name: 'Prone W raise prep', seconds: 40, cue: 'Squeeze from the upper back.' },
+          { name: 'Bird dog prep', seconds: 40, cue: 'Reach long without twisting.' },
+          { name: 'Standing reset', seconds: 40, cue: 'Prepare for longer upper-body work.' }
+        ],
+        exercises: [
+          { name: 'Kneeling push-up with slow lower', cue: 'Lower for 3 seconds, press up smoothly.' },
+          { name: 'Single-arm floor press with pause', cue: 'Pause at the bottom before pressing.' },
+          { name: 'Bent-over row with squeeze', cue: 'Hold the top for 1 second.' },
+          { name: 'Lateral raise plus partials', cue: 'Finish with small controlled pulses.' },
+          { name: 'Bird dog with pause', cue: 'Pause fully extended for control.' },
+          { name: 'Fast punch combo with shuffle', cue: 'Stay light through the feet and keep shoulders relaxed.' }
+        ],
+        cooldown: [
+          'Walk around gently for 30 to 60 seconds.',
+          'Chest opener: 30 seconds.',
+          'Cross-body shoulder stretch: 30 seconds each side.',
+          'Thread-the-needle or long exhale breathing: 30 to 60 seconds.'
+        ]
+      }
+    };
+
+    const schedule = [
+      { week: 1, day: 1, workoutId: 'full_body_foundation', note: 'Start smoothly. Learn the exercise order and pacing.' },
+      { week: 1, day: 2, workoutId: 'cardio_core_foundation', note: 'Use low-impact rhythm, not all-out speed.' },
+      { week: 1, day: 3, workoutId: 'lower_body_foundation', note: 'Treat tempo as the main challenge, not weight.' },
+      { week: 1, day: 4, workoutId: 'upper_body_foundation', note: 'Keep the trunk still while the arms work.' },
+      { week: 2, day: 1, workoutId: 'full_body_foundation', note: 'Smoother transitions. Aim to settle into all 4 rounds.' },
+      { week: 2, day: 2, workoutId: 'cardio_core_foundation', note: 'Hold posture better in the final plank and fast-feet blocks.' },
+      { week: 2, day: 3, workoutId: 'lower_body_foundation', note: 'Slightly cleaner depth and stronger glute lockout.' },
+      { week: 2, day: 4, workoutId: 'upper_body_foundation', note: 'Use more deliberate pauses on press and row.' },
+      { week: 3, day: 1, workoutId: 'full_body_progression', note: 'Longer bouts start here. Keep quality before pace.' },
+      { week: 3, day: 2, workoutId: 'cardio_core_progression', note: 'Raise demand through sharper arm drive and trunk control.' },
+      { week: 3, day: 3, workoutId: 'lower_body_progression', note: 'The leg session is denser. Stay balanced and controlled.' },
+      { week: 3, day: 4, workoutId: 'upper_body_progression', note: 'More time under tension. Do not rush the lowering phase.' },
+      { week: 4, day: 1, workoutId: 'full_body_progression', note: 'Consolidation week. Stay crisp rather than chasing fatigue.' },
+      { week: 4, day: 2, workoutId: 'cardio_core_progression', note: 'Consolidation week. Keep breathing steady in the hardest blocks.' },
+      { week: 4, day: 3, workoutId: 'lower_body_progression', note: 'Consolidation week. Use control over range if legs feel heavy.' },
+      { week: 4, day: 4, workoutId: 'upper_body_progression', note: 'Consolidation week. Clean execution is the finish line.' }
+    ].map((s, index) => ({ ...s, index, key: `week${s.week}_day${s.day}` }));
+
+    let progress = loadProgress();
+    progress.dayState = normalizeDayState(progress.dayState);
+    let activeWorkoutSession = null;
+    let intervalId = null;
+    let running = false;
+    let secondsLeft = 0;
+    let currentSegmentIndex = 0;
+    let wakeLockSentinel = null;
+    let audioCtx = null;
+    let audioEnabled = progress.audioEnabled !== false;
+
+    async function requestWakeLock() {
+      if (!('wakeLock' in navigator)) return;
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        document.getElementById('wakelockBadge').classList.add('active');
+        wakeLockSentinel.addEventListener('release', () => {
+          document.getElementById('wakelockBadge').classList.remove('active');
+        });
+      } catch (_) { /* permission denied or unsupported — fail silently */ }
+    }
+
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        try { await wakeLockSentinel.release(); } catch (_) {}
+        wakeLockSentinel = null;
+      }
+      document.getElementById('wakelockBadge').classList.remove('active');
+    }
+
+    // Reacquire wake lock if page becomes visible again mid-workout
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState === 'visible' && running && !wakeLockSentinel) {
+        await requestWakeLock();
+      }
+    });
+
+    // ── Audio Engine (Web Audio API — no files) ────────────────────────────
+    function getAudioCtx() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (_) { return null; }
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playTone(frequency, duration, type = 'sine', volume = 0.35) {
+      if (!audioEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration + 0.05);
+    }
+
+    // Distinct sounds for different events
+    function beepCountdown() { playTone(880, 0.12, 'square', 0.22); }      // high tick — last 3s
+    function beepTransition() {                                              // rising two-tone — segment change
+      playTone(523, 0.12, 'sine', 0.3);
+      setTimeout(() => playTone(784, 0.18, 'sine', 0.3), 100);
+    }
+    function beepRoundRest() {                                               // falling — round rest start
+      playTone(659, 0.15, 'sine', 0.28);
+      setTimeout(() => playTone(494, 0.25, 'sine', 0.28), 130);
+    }
+    function beepWorkoutStart() {                                            // triple chirp — session start
+      playTone(523, 0.08, 'sine', 0.28);
+      setTimeout(() => playTone(659, 0.08, 'sine', 0.28), 100);
+      setTimeout(() => playTone(784, 0.18, 'sine', 0.35), 200);
+    }
+    function beepComplete() {                                                // success chord
+      playTone(523, 0.2, 'sine', 0.3);
+      setTimeout(() => playTone(659, 0.2, 'sine', 0.28), 60);
+      setTimeout(() => playTone(784, 0.35, 'sine', 0.25), 120);
+    }
+
+    // ── Export / Import ────────────────────────────────────────────────────
+    function exportProgress() {
+      const payload = JSON.stringify(progress, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `workout_progress_${date}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importProgress(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (typeof parsed !== 'object' || !parsed.completed) {
+            alert('This file does not look like a valid progress export. Import cancelled.');
+            return;
+          }
+          if (!confirm(`This will replace your current progress (${Object.keys(progress.completed).length} workouts logged) with the imported data (${Object.keys(parsed.completed).length} workouts logged). Continue?`)) return;
+          progress = {
+            completed: parsed.completed || {},
+            easierMode: Boolean(parsed.easierMode),
+            dayState: normalizeDayState(parsed.dayState || 'standard')
+          };
+          saveProgress();
+          renderAll();
+        } catch (_) {
+          alert('Could not read that file. Make sure it is a JSON export from this planner.');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function loadProgress() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { completed: {}, easierMode: false, audioEnabled: true };
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          completed: parsed && parsed.completed ? parsed.completed : {},
+          easierMode: Boolean(parsed && parsed.easierMode),
+          dayState: normalizeDayState(parsed && parsed.dayState ? parsed.dayState : 'standard'),
+          audioEnabled: parsed && parsed.audioEnabled === false ? false : true
+        };
+      } catch {
+        return { completed: {}, easierMode: false, dayState: 'standard', audioEnabled: true };
+      }
+    }
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    }
+
+    function normalizeDayState(value) {
+      if (value === 'lowEnergy') return 'low_energy';
+      if (value === 'jointFriendly') return 'joint_friendly';
+      if (value === 'low_energy' || value === 'joint_friendly' || value === 'standard') return value;
+      return 'standard';
+    }
+
+    function getDayStateLabel() {
+      const state = normalizeDayState(progress.dayState);
+      return state === 'low_energy' ? 'Low energy day' : state === 'joint_friendly' ? 'Joint-friendly day' : 'Standard day';
+    }
+
+    function adjustExerciseName(name) {
+      const state = progress.dayState;
+      if (normalizeDayState(state) === 'low_energy') {
+        if (name.includes('Fast feet')) return 'March in place with arm drive';
+        if (name.includes('Mountain climber')) return 'Standing knee drive march';
+        if (name.includes('Kneeling push-up')) return 'Wall push-up';
+        if (name.includes('Reverse lunge')) return 'Static split squat hold';
+        if (name.includes('Split squat')) return 'Reduced-range split squat';
+        if (name.includes('Tempo squat with pulse')) return 'Tempo squat';
+        if (name.includes('Wall sit')) return 'Bridge hold';
+        if (name.includes('Fast punch combo')) return 'March and punch';
+        if (name.includes('Bicycle crunch')) return 'Dead bug';
+      }
+      if (normalizeDayState(state) === 'joint_friendly') {
+        if (name.includes('Mountain climber')) return 'Dead bug';
+        if (name.includes('Bicycle crunch')) return 'Dead bug heel tap';
+        if (name.includes('Plank shoulder tap')) return 'Wall shoulder tap';
+        if (name.includes('Forearm plank')) return 'Forearm plank from knees';
+        if (name.includes('Kneeling push-up')) return 'Wall push-up';
+        if (name.includes('Reverse lunge')) return 'Static split squat short range';
+        if (name.includes('Split squat')) return 'Staggered squat short range';
+        if (name.includes('Wall sit')) return 'Glute bridge hold';
+        if (name.includes('Fast punch combo')) return 'Tall punch combo';
+      }
+      return name;
+    }
+
+    function getAdjustedExercises(workout) {
+      return workout.exercises.map(ex => ({ ...ex, name: adjustExerciseName(ex.name) }));
+    }
+
+    function getWorkoutSettings(workout) {
+      const settings = { ...workout.settings, easierMode: false };
+      if (progress.easierMode) {
+        settings.rounds = Math.max(3, settings.rounds - 1);
+        settings.work = Math.max(35, settings.work - 10);
+        settings.rest = settings.rest + 5;
+        settings.roundRest = settings.roundRest + 15;
+        settings.easierMode = true;
+      }
+      if (normalizeDayState(progress.dayState) === 'low_energy') {
+        settings.rounds = Math.max(3, settings.rounds - 1);
+        settings.work = Math.max(35, settings.work - 5);
+        settings.rest = settings.rest + 5;
+        settings.roundRest = settings.roundRest + 15;
+      }
+      if (normalizeDayState(progress.dayState) === 'joint_friendly') {
+        settings.rest = settings.rest + 5;
+      }
+      return settings;
+    }
+
+    function formatApproxMinutes(totalSeconds) {
+      return `${Math.max(1, Math.round(totalSeconds / 60))} min`;
+    }
+
+    function getWorkoutTimings(workout, settings) {
+      const warmupSeconds = workout.warmup.reduce((sum, item) => sum + item.seconds, 0);
+      const exerciseCount = workout.exercises.length;
+      const mainSeconds = settings.rounds * ((exerciseCount * settings.work) + ((exerciseCount - 1) * settings.rest)) + ((settings.rounds - 1) * settings.roundRest);
+      const cooldownSeconds = settings.cooldown || 0;
+      return {
+        warmupSeconds,
+        mainSeconds,
+        cooldownSeconds,
+        totalSeconds: warmupSeconds + mainSeconds + cooldownSeconds,
+        mainLabel: formatApproxMinutes(mainSeconds),
+        totalLabel: formatApproxMinutes(warmupSeconds + mainSeconds + cooldownSeconds)
+      };
+    }
+
+    function getNextIncompleteIndex() {
+      return schedule.findIndex(s => !progress.completed[s.key]);
+    }
+
+    function isCompleted(key) {
+      return Boolean(progress.completed[key]);
+    }
+
+    function getVisibleWeek() {
+      const nextIndex = getNextIncompleteIndex();
+      if (nextIndex === -1) return 4;
+      return schedule[nextIndex].week;
+    }
+
+    function isLockedSession(session, nextIndex) {
+      if (nextIndex === -1) return false;
+      if (session.index < nextIndex) return false;
+      return session.index > nextIndex;
+    }
+
+    function formatDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    }
+
+    function resetProgramme() {
+      if (!confirm('Reset all workout progress and settings in this browser?')) return;
+      progress = { completed: {}, easierMode: false, dayState: 'standard' };
+      saveProgress();
+      renderAll();
+    }
+
+    function renderCurrentCard() {
+      const card = document.getElementById('currentCard');
+      const nextIndex = getNextIncompleteIndex();
+
+      if (nextIndex === -1) {
+        card.innerHTML = `
+          <div class="current-title">
+            <div>
+              <div class="status completed">Programme complete</div>
+              <h2 style="margin-bottom:6px;">All 16 workouts are completed</h2>
+              <p class="subtle" style="margin-bottom:0;">You can reset the programme and run the 4-week block again, or keep easier mode on for a lighter repeat block.</p>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn secondary" id="inlineResetBtn">Reset programme</button>
+          </div>
+        `;
+        document.getElementById('inlineResetBtn').onclick = resetProgramme;
+        return;
+      }
+
+      const session = schedule[nextIndex];
+      const workout = workoutTemplates[session.workoutId];
+      const settings = getWorkoutSettings(workout);
+      const effectiveExercises = getAdjustedExercises(workout);
+      const timings = getWorkoutTimings({ ...workout, exercises: effectiveExercises }, settings);
+      card.innerHTML = `
+        <div class="current-title">
+          <div>
+            <div class="status current">Next workout</div>
+            <h2 style="margin-bottom:6px;">Week ${session.week} Day ${session.day} - ${workout.title}</h2>
+            <p class="subtle" style="margin-bottom:0;">${workout.focus}. Main block: about ${timings.mainLabel}. Total session with warm-up and cool-down: about ${timings.totalLabel}.${progress.easierMode ? ' Easier mode is on for today.' : ''}</p>
+            ${session.note ? `<p class="small subtle" style="margin:8px 0 0;">${session.note}</p>` : ''}
+            ${progress.dayState !== 'standard' ? `<div class="adjustment-chip">${getDayStateLabel()} active</div>` : ''}
+          </div>
+        </div>
+        <div class="btn-row full-width" style="margin-top:14px;">
+          <button class="btn" id="startCurrentWorkoutBtn">Start workout</button>
+        </div>
+      `;
+      document.getElementById('startCurrentWorkoutBtn').onclick = () => openPrestart(session.index);
+    }
+
+    function renderStats() {
+      const done = Object.keys(progress.completed).length;
+      const remaining = schedule.length - done;
+      const visibleWeek = getVisibleWeek();
+      document.getElementById('doneCount').textContent = done;
+      document.getElementById('remainingCount').textContent = remaining;
+      document.getElementById('weekCount').textContent = visibleWeek;
+      const modeBits = [];
+      if (progress.easierMode) modeBits.push('Easier mode is on.');
+      if ((progress.dayState || 'standard') !== 'standard') modeBits.push(`${getDayStateLabel()} selected.`);
+      modeBits.push('Progress and settings are stored only in this browser using local storage.');
+      document.getElementById('modeNote').textContent = modeBits.join(' ');
+      document.getElementById('easierModeToggle').checked = Boolean(progress.easierMode);
+      document.getElementById('audioToggle').checked = audioEnabled;
+      document.getElementById('dayStateSelect').value = normalizeDayState(progress.dayState || 'standard');
+    }
+
+    function renderPlanner() {
+      const planner = document.getElementById('planner');
+      const nextIndex = getNextIncompleteIndex();
+      const visibleWeek = getVisibleWeek();
+      document.getElementById('plannerTitle').textContent = `Week ${visibleWeek} planner`;
+      planner.innerHTML = '';
+
+      schedule.filter(s => s.week === visibleWeek).forEach(session => {
+        const workout = workoutTemplates[session.workoutId];
+        const done = isCompleted(session.key);
+        const isCurrent = session.index === nextIndex;
+        const locked = !done && isLockedSession(session, nextIndex);
+        const history = progress.completed[session.key];
+        const tile = document.createElement('div');
+        tile.className = `session-tile ${done ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${locked ? 'locked' : ''}`;
+        tile.innerHTML = `
+          <div>
+            <div class="status ${done ? 'completed' : isCurrent ? 'current' : 'locked'}">${done ? 'Completed' : isCurrent ? 'Current' : 'Locked'}</div>
+            <div style="display:flex;align-items:center;">
+              <span class="checkmark ${done ? 'done' : ''}">${done ? '✓' : ''}</span>
+              <div>
+                <div class="tile-title">Day ${session.day}</div>
+                <div class="tile-meta">${workout.title}</div>
+              </div>
+            </div>
+            <div class="small subtle">${workout.focus}</div>
+            <div class="small subtle" style="margin:6px 0 0;">Main block: ${workout.mainDuration}</div>
+            <div class="small subtle" style="margin:2px 0 6px;">Total session: ${workout.totalDuration}</div>
+            ${session.note ? `<div class="small subtle">${session.note}</div>` : ''}
+            ${history ? `<div class="history-chip">Done on ${formatDate(history.completedAt)}</div>` : ''}
+          </div>
+          <div class="btn-row">
+            <button class="btn secondary" data-session-index="${session.index}" data-view="1" ${locked ? 'disabled' : ''}>View</button>
+          </div>
+        `;
+        planner.appendChild(tile);
+      });
+
+      planner.querySelectorAll('[data-view]').forEach(btn => {
+        btn.addEventListener('click', e => {
+          if (e.target.disabled) return;
+          openDetails(Number(e.target.dataset.sessionIndex));
+        });
+      });
+    }
+
+    function buildSegments(workout, settings) {
+      const segs = [];
+      workout.warmup.forEach(item => segs.push({ phase: 'Warm-up', label: item.name, seconds: item.seconds, cue: item.cue }));
+      for (let round = 1; round <= settings.rounds; round++) {
+        workout.exercises.forEach((ex, idx) => {
+          segs.push({ phase: 'Main set', round, totalRounds: settings.rounds, label: ex.name, seconds: settings.work, cue: ex.cue });
+          const isLastExercise = idx === workout.exercises.length - 1;
+          if (!isLastExercise) {
+            segs.push({ phase: 'Rest', round, totalRounds: settings.rounds, label: 'Rest', seconds: settings.rest, cue: 'Reset and prepare for the next movement.' });
+          }
+        });
+        if (round < settings.rounds) {
+          segs.push({ phase: 'Round rest', round, totalRounds: settings.rounds, label: 'Round rest', seconds: settings.roundRest, cue: 'Take a longer reset before the next round.' });
+        }
+      }
+      return segs;
+    }
+
+    function openDetails(sessionIndex) {
+      const session = schedule[sessionIndex];
+      const nextIndex = getNextIncompleteIndex();
+      if (sessionIndex > nextIndex && nextIndex !== -1) return;
+
+      const workout = workoutTemplates[session.workoutId];
+      const settings = getWorkoutSettings(workout);
+      const timings = getWorkoutTimings(workout, settings);
+      document.getElementById('detailsTitle').textContent = `Week ${session.week} Day ${session.day} - ${workout.title}`;
+      const effectiveExercises = getAdjustedExercises(workout);
+      document.getElementById('detailsMeta').textContent = `${workout.focus} • Main block about ${timings.mainLabel} • Total about ${timings.totalLabel}${settings.easierMode ? ' • Easier mode active' : ''}${progress.dayState !== 'standard' ? ` • ${getDayStateLabel()}` : ''}`;
+      document.getElementById('detailsDesign').innerHTML = `
+        <div><span class="badge">${workout.equipment}</span><span class="badge">${settings.rounds} rounds</span><span class="badge">${settings.work}s work / ${settings.rest}s rest</span><span class="badge">Total about ${timings.totalLabel}</span>${progress.dayState !== 'standard' ? `<span class="badge">${getDayStateLabel()}</span>` : ''}</div>
+        <div class="small subtle" style="margin-top:8px;">${session.note || ''}</div>
+      `;
+      document.getElementById('detailsFocus').textContent = workout.coachingFocus;
+      document.getElementById('detailsProgression').innerHTML = workout.progression.map(item => `<li>${item}</li>`).join('');
+      document.getElementById('detailsWarmup').innerHTML = workout.warmup.map(item => `<li>${item.name} - ${item.seconds}s. ${item.cue}</li>`).join('');
+      document.getElementById('detailsExercises').innerHTML = effectiveExercises.map(item => `<li>${item.name}. ${item.cue}</li>`).join('');
+      document.getElementById('detailsCooldown').innerHTML = workout.cooldown.map(item => `<li>${item}</li>`).join('');
+      document.getElementById('detailsEasier').textContent = workout.easierModeNote;
+      document.getElementById('detailsSubsEnergy').innerHTML = workout.substitutions.energy.map(item => `<li>${item}</li>`).join('');
+      document.getElementById('detailsSubsJoint').innerHTML = workout.substitutions.joint.map(item => `<li>${item}</li>`).join('');
+      // Hide start button — only shown when opened from prestart
+      document.getElementById('detailsStartBtn').style.display = 'none';
+      document.getElementById('detailsOverlay').classList.add('active');
+      setOverlayState(true);
+    }
+
+    let preparedSessionIndex = null;
+
+    function openPrestart(sessionIndex) {
+      const nextIndex = getNextIncompleteIndex();
+      if (sessionIndex > nextIndex && nextIndex !== -1) return;
+
+      const session = schedule[sessionIndex];
+      const workout = workoutTemplates[session.workoutId];
+      const settings = getWorkoutSettings(workout);
+      const effectiveExercises = getAdjustedExercises(workout);
+      const timings = getWorkoutTimings(workout, settings);
+
+      preparedSessionIndex = sessionIndex;
+      document.getElementById('prestartTitle').textContent = `Week ${session.week} Day ${session.day} - ${workout.title}`;
+      document.getElementById('prestartMeta').textContent = `${workout.focus} • Main block about ${timings.mainLabel} • Total about ${timings.totalLabel}`;
+      document.getElementById('prestartSummary').innerHTML = `
+        <div><span class="badge">${workout.equipment}</span><span class="badge">${settings.rounds} rounds</span><span class="badge">${settings.work}s work / ${settings.rest}s rest</span></div>
+        <div class="small subtle" style="margin-top:10px;">${session.note || workout.coachingFocus}</div>
+        <div class="small" style="margin-top:10px;"><strong>Warm-up:</strong> about ${formatApproxMinutes(timings.warmupSeconds)} • <strong>Main block:</strong> about ${timings.mainLabel} • <strong>Cool-down:</strong> about ${formatApproxMinutes(timings.cooldownSeconds)}</div>
+      `;
+      document.getElementById('prestartAdjustment').textContent = normalizeDayState(progress.dayState) === 'low_energy'
+        ? 'Low energy day is active. The session will use a lighter pattern and slightly lower density today.'
+        : normalizeDayState(progress.dayState) === 'joint_friendly'
+        ? 'Joint-friendly day is active. A few movements will be swapped and recovery will be slightly longer today.'
+        : progress.easierMode
+        ? 'Easier mode is active. The session will run at a lighter overall density today.'
+        : 'Standard mode is active. You can still change today’s adjustment from the main page before you start.';
+      document.getElementById('prestartPreview').innerHTML = effectiveExercises.map(item => `<li>${item.name} <span class="subtle">- ${item.cue}</span></li>`).join('');
+      document.getElementById('prestartOverlay').classList.add('active');
+      setOverlayState(true);
+    }
+
+    function startPreparedWorkout() {
+      if (preparedSessionIndex === null) return;
+      document.getElementById('prestartOverlay').classList.remove('active');
+      openWorkout(preparedSessionIndex, true);
+    }
+
+    function openDetailsFromPrestart() {
+      if (preparedSessionIndex === null) return;
+      document.getElementById('prestartOverlay').classList.remove('active');
+      openDetails(preparedSessionIndex);
+      // Show the Start button since user came from the prestart flow
+      document.getElementById('detailsStartBtn').style.display = 'inline-flex';
+    }
+
+    function closePrestart() {
+      document.getElementById('prestartOverlay').classList.remove('active');
+      preparedSessionIndex = null;
+      setOverlayState(false);
+    }
+
+    function openWorkout(sessionIndex, autoStart) {
+      const nextIndex = getNextIncompleteIndex();
+      if (sessionIndex > nextIndex && nextIndex !== -1) return;
+
+      const session = schedule[sessionIndex];
+      const workout = workoutTemplates[session.workoutId];
+      const settings = getWorkoutSettings(workout);
+      const effectiveExercises = getAdjustedExercises(workout);
+      const effectiveWorkout = { ...workout, exercises: effectiveExercises };
+      const timings = getWorkoutTimings(effectiveWorkout, settings);
+      const segments = buildSegments(effectiveWorkout, settings);
+      activeWorkoutSession = { session, workout: effectiveWorkout, settings, segments };
+      currentSegmentIndex = 0;
+      running = false;
+      clearInterval(intervalId);
+      secondsLeft = segments[0].seconds;
+
+      document.getElementById('playerWorkoutTitle').textContent = `Week ${session.week} Day ${session.day} — ${workout.title}`;
+      document.getElementById('completionBox').style.display = 'none';
+      document.getElementById('playerMain').style.display = 'flex';
+      document.getElementById('playerFooterSticky').style.display = 'block';
+      document.getElementById('completionEasierBtn').style.display = progress.easierMode ? 'none' : 'inline-flex';
+      updatePlayerUI();
+      document.getElementById('playerOverlay').classList.add('active');
+      setOverlayState(true);
+      if (autoStart) togglePlayPause();
+    }
+
+    function updatePlayerUI() {
+      if (!activeWorkoutSession) return;
+      const seg = activeWorkoutSession.segments[currentSegmentIndex];
+      document.getElementById('playerPhaseLabel').textContent = seg.phase;
+      document.getElementById('exerciseName').textContent = seg.label;
+      document.getElementById('exerciseCue').textContent = seg.cue;
+      const metaLabel = !seg.round ? 'Warm-up'
+        : (seg.phase === 'Rest' || seg.phase === 'Round rest')
+          ? `${seg.phase} — Round ${seg.round} of ${seg.totalRounds}`
+          : `Round ${seg.round} of ${seg.totalRounds}`;
+      document.getElementById('segmentMeta').textContent = metaLabel;
+      document.getElementById('timerText').textContent = formatTime(secondsLeft);
+      const progressPct = ((seg.seconds - secondsLeft) / seg.seconds) * 100;
+      document.getElementById('phaseProgress').style.width = `${Math.max(0, Math.min(100, progressPct))}%`;
+
+      // Show "Up next" only during rest phases
+      const isRest = seg.phase === 'Rest' || seg.phase === 'Round rest';
+      const nextUpEl = document.getElementById('nextUpBox');
+      if (isRest) {
+        const nextSeg = activeWorkoutSession.segments[currentSegmentIndex + 1];
+        nextUpEl.style.display = 'block';
+        nextUpEl.innerHTML = nextSeg
+          ? `<strong>Up next:</strong> ${nextSeg.label}`
+          : '<strong>Up next:</strong> Cool-down';
+      } else {
+        nextUpEl.style.display = 'none';
+      }
+      document.getElementById('playPauseBtn').textContent = running ? 'Pause' : 'Start';
+    }
+
+    function formatTime(totalSeconds) {
+      const min = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const sec = String(totalSeconds % 60).padStart(2, '0');
+      return `${min}:${sec}`;
+    }
+
+    function advanceSegment() {
+      if (!activeWorkoutSession) return;
+      currentSegmentIndex += 1;
+      if (currentSegmentIndex >= activeWorkoutSession.segments.length) {
+        running = false;
+        clearInterval(intervalId);
+        releaseWakeLock();
+        document.getElementById('playPauseBtn').textContent = 'Start';
+        document.getElementById('nextUpBox').style.display = 'none';
+        document.getElementById('playerPhaseLabel').textContent = 'Workout finished';
+        document.getElementById('exerciseName').textContent = 'Cool-down';
+        document.getElementById('exerciseCue').textContent = 'Walk it off, stretch lightly, then mark the workout complete.';
+        document.getElementById('timerText').textContent = '00:00';
+        document.getElementById('phaseProgress').style.width = '100%';
+        document.getElementById('segmentMeta').textContent = 'All rounds done';
+        beepComplete();
+        return;
+      }
+      const nextSeg = activeWorkoutSession.segments[currentSegmentIndex];
+      if (nextSeg.phase === 'Round rest') {
+        beepRoundRest();
+      } else {
+        beepTransition();
+      }
+      secondsLeft = nextSeg.seconds;
+      updatePlayerUI();
+    }
+
+    function togglePlayPause() {
+      if (!activeWorkoutSession) return;
+      if (running) {
+        running = false;
+        clearInterval(intervalId);
+        releaseWakeLock();
+        updatePlayerUI();
+        return;
+      }
+      running = true;
+      requestWakeLock();
+      beepWorkoutStart();
+      updatePlayerUI();
+      intervalId = setInterval(() => {
+        secondsLeft -= 1;
+        // Countdown beep for last 3 seconds of any segment
+        if (secondsLeft > 0 && secondsLeft <= 3) {
+          beepCountdown();
+          const timerEl = document.getElementById('timerText');
+          timerEl.classList.remove('countdown-flash');
+          void timerEl.offsetWidth; // reflow to restart animation
+          timerEl.classList.add('countdown-flash');
+        }
+        if (secondsLeft <= 0) {
+          advanceSegment();
+          if (!running) clearInterval(intervalId);
+        } else {
+          updatePlayerUI();
+        }
+      }, 1000);
+    }
+
+    function skipSegment() {
+      advanceSegment();
+    }
+
+    function completeWorkout() {
+      if (!activeWorkoutSession) return;
+      const { session, workout } = activeWorkoutSession;
+      progress.completed[session.key] = { completedAt: new Date().toISOString(), workoutId: workout.id };
+      saveProgress();
+      renderAll();
+      showCompletionState(session, workout);
+    }
+
+    function showCompletionState(session, workout) {
+      document.getElementById('playerMain').style.display = 'none';
+      document.getElementById('playerFooterSticky').style.display = 'none';
+      document.getElementById('completionBox').style.display = 'block';
+      document.getElementById('completionTitle').textContent = `Week ${session.week} Day ${session.day} completed`;
+      document.getElementById('completionText').textContent = `Nice work. ${workout.title} has been logged in your planner.`;
+      const nextIndex = getNextIncompleteIndex();
+      if (nextIndex === -1) {
+        document.getElementById('completionNext').innerHTML = 'You have completed the full 4-week block. Reset the programme if you want to run it again.';
+      } else {
+        const next = schedule[nextIndex];
+        const nextWorkout = workoutTemplates[next.workoutId];
+        document.getElementById('completionNext').innerHTML = `<strong>Next up:</strong> Week ${next.week} Day ${next.day} - ${nextWorkout.title}. ${next.note || ''}`;
+      }
+    }
+
+    function setOverlayState(isOpen) {
+      document.body.classList.toggle('overlay-open', isOpen);
+    }
+
+    function closeOverlays() {
+      running = false;
+      clearInterval(intervalId);
+      releaseWakeLock();
+      document.getElementById('detailsOverlay').classList.remove('active');
+      document.getElementById('playerOverlay').classList.remove('active');
+      document.getElementById('prestartOverlay').classList.remove('active');
+      preparedSessionIndex = null;
+      setOverlayState(false);
+    }
+
+    function repeatActiveSession() {
+      if (!activeWorkoutSession) return;
+      const idx = activeWorkoutSession.session.index;
+      openWorkout(idx, false);
+    }
+
+    function renderAll() {
+      renderCurrentCard();
+      renderStats();
+      renderPlanner();
+    }
+
+    document.getElementById('resetPlanBtn').addEventListener('click', resetProgramme);
+    document.getElementById('closePrestartBtn').addEventListener('click', closePrestart);
+    document.getElementById('beginWorkoutBtn').addEventListener('click', startPreparedWorkout);
+    document.getElementById('prestartDetailsBtn').addEventListener('click', openDetailsFromPrestart);
+    document.getElementById('easierModeToggle').addEventListener('change', e => {
+      progress.easierMode = Boolean(e.target.checked);
+      saveProgress();
+      renderAll();
+    });
+    document.getElementById('audioToggle').addEventListener('change', e => {
+      audioEnabled = Boolean(e.target.checked);
+      progress.audioEnabled = audioEnabled;
+      saveProgress();
+      // Play a test tone when enabling so user knows it's working
+      if (audioEnabled) beepTransition();
+    });
+    document.getElementById('dayStateSelect').addEventListener('change', e => {
+      progress.dayState = normalizeDayState(e.target.value);
+      saveProgress();
+      renderAll();
+    });
+    document.getElementById('exportBtn').addEventListener('click', exportProgress);
+    document.getElementById('importFileInput').addEventListener('change', e => {
+      importProgress(e.target.files[0]);
+      e.target.value = ''; // reset so same file can be re-imported if needed
+    });
+
+    document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+      document.getElementById('detailsOverlay').classList.remove('active');
+      setOverlayState(false);
+    });
+    document.getElementById('detailsStartBtn').addEventListener('click', () => {
+      if (preparedSessionIndex === null) return;
+      document.getElementById('detailsOverlay').classList.remove('active');
+      openWorkout(preparedSessionIndex, true);
+    });
+    document.getElementById('closePlayerBtn').addEventListener('click', closeOverlays);
+    document.getElementById('playPauseBtn').addEventListener('click', togglePlayPause);
+    document.getElementById('skipBtn').addEventListener('click', skipSegment);
+    document.getElementById('completeBtn').addEventListener('click', completeWorkout);
+    document.getElementById('closeCompletionBtn').addEventListener('click', closeOverlays);
+    document.getElementById('repeatSessionBtn').addEventListener('click', repeatActiveSession);
+    document.getElementById('completionEasierBtn').addEventListener('click', () => {
+      progress.easierMode = true;
+      saveProgress();
+      renderAll();
+      document.getElementById('completionEasierBtn').style.display = 'none';
+    });
+
+    document.getElementById('detailsOverlay').addEventListener('click', e => {
+      if (e.target.id === 'detailsOverlay') { document.getElementById('detailsOverlay').classList.remove('active'); setOverlayState(false); }
+    });
+    document.getElementById('prestartOverlay').addEventListener('click', e => {
+      if (e.target.id === 'prestartOverlay') closePrestart();
+    });
+    document.getElementById('playerOverlay').addEventListener('click', e => {
+      if (e.target.id === 'playerOverlay') closeOverlays();
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
