@@ -1,1 +1,237 @@
+.player-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 18, 16, 0.72);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  z-index: 10;
+}
 
+.player-overlay.active { display: flex; }
+
+.player {
+  width: min(900px, 100%);
+  max-height: min(92vh, 920px);
+  height: min(92vh, 920px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+
+.player-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  padding-bottom: 12px;
+  margin: -20px -20px 0;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--line);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+}
+
+.player-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 32px 0 16px;
+}
+
+.player-body-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-cue {
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+
+.player-round-meta {
+  margin-top: 2px;
+}
+
+.next-up-box {
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--accent-soft-2);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.next-up-box strong {
+  color: var(--text);
+}
+
+.timer {
+  font-size: 58px;
+  font-weight: 900;
+  line-height: 1;
+  margin: 10px 0 8px;
+  color: var(--accent-dark);
+}
+
+.timer.countdown-flash {
+  animation: flash-red 0.18s ease-out;
+}
+
+@keyframes flash-red {
+  0% { color: var(--accent); transform: scale(1.06); }
+  100% { color: var(--accent-dark); transform: scale(1); }
+}
+
+.phase {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent-dark);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exercise-name {
+  font-size: 28px;
+  font-weight: 900;
+  margin: 8px 0;
+}
+
+.progressbar {
+  height: 10px;
+  background: #f1dfd8;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 14px 0 10px;
+}
+
+.progressbar > div {
+  height: 100%;
+  background: linear-gradient(135deg, var(--accent) 0%, #f07b52 100%);
+  width: 0%;
+}
+
+.footer-controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.player-footer-sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255,255,255,0.86) 0%, #fff 16%);
+  margin: 0 -20px -20px;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+}
+
+.player .footer-controls { margin-top: 0; }
+
+.player-footer-sticky .footer-controls {
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 0;
+}
+
+.player-footer-sticky .footer-controls .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 11px 8px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail-box {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: #fffaf8;
+}
+
+.detail-box h3 { margin-bottom: 8px; }
+.detail-list { margin: 0; padding-left: 18px; }
+
+.prestart-box {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: linear-gradient(180deg, #fffdfc 0%, #fff7f4 100%);
+}
+
+.prestart-list {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.prestart-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.prestart-actions .btn {
+  flex: 1 1 180px;
+}
+
+.completion-box {
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(135deg, #fff9f6 0%, #fff2ec 100%);
+}
+
+@media (max-width: 960px) {
+  .timer { font-size: 46px; }
+  .exercise-name { font-size: 24px; }
+
+  .player-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .player {
+    width: 100%;
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 24px 24px 0 0;
+    padding: 16px;
+    overscroll-behavior: contain;
+  }
+
+  .player-header {
+    margin: -16px -16px 0;
+    padding: 14px 16px 12px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+  }
+
+  .player-footer-sticky {
+    margin: 0 -16px -16px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (max-width: 640px) {
+  .timer { font-size: 42px; }
+  .exercise-name { font-size: 22px; }
+  .player { border-radius: 20px 20px 0 0; }
+  .player-header { border-top-left-radius: 20px; border-top-right-radius: 20px; }
+  .player-footer-sticky .footer-controls .btn { width: auto; }
+  .footer-controls { gap: 8px; }
+  .subtle, .small { line-height: 1.4; }
+}
