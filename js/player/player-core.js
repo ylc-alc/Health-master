@@ -51,23 +51,28 @@ export function updatePlayerUI(ctx) {
   if (!ctx.state.activeWorkoutSession) return;
 
   const seg = ctx.state.activeWorkoutSession.segments[ctx.state.currentSegmentIndex];
+  const isRest = seg.phase === 'Rest' || seg.phase === 'Round rest';
+
   ctx.elements.playerPhaseLabel.textContent = seg.phase;
   ctx.elements.exerciseName.textContent = seg.label;
-  ctx.elements.exerciseCue.textContent = seg.cue;
+  ctx.elements.exerciseCue.textContent = isRest
+    ? 'Reset, breathe, and get ready for the next block.'
+    : seg.cue;
 
-  const metaLabel = !seg.round
-    ? 'Warm-up'
-    : (seg.phase === 'Rest' || seg.phase === 'Round rest')
-      ? `${seg.phase} — Round ${seg.round} of ${seg.totalRounds}`
-      : `Round ${seg.round} of ${seg.totalRounds}`;
+  let metaLabel = '';
+  if (seg.phase === 'Main set') {
+    metaLabel = `Round ${seg.round} of ${seg.totalRounds}`;
+  } else if (seg.phase === 'Rest' || seg.phase === 'Round rest') {
+    metaLabel = `${seg.phase} — Round ${seg.round} of ${seg.totalRounds}`;
+  }
 
   ctx.elements.segmentMeta.textContent = metaLabel;
+  ctx.elements.segmentMeta.style.display = metaLabel ? 'block' : 'none';
+
   ctx.elements.timerText.textContent = formatTime(ctx.state.secondsLeft);
 
   const progressPct = ((seg.seconds - ctx.state.secondsLeft) / seg.seconds) * 100;
   ctx.elements.phaseProgress.style.width = `${Math.max(0, Math.min(100, progressPct))}%`;
-
-  const isRest = seg.phase === 'Rest' || seg.phase === 'Round rest';
 
   if (isRest) {
     const nextSeg = ctx.state.activeWorkoutSession.segments[ctx.state.currentSegmentIndex + 1];
@@ -99,7 +104,8 @@ function advanceSegment(ctx) {
     ctx.elements.exerciseCue.textContent = 'Walk it off, stretch lightly, then tap Complete.';
     ctx.elements.timerText.textContent = '00:00';
     ctx.elements.phaseProgress.style.width = '100%';
-    ctx.elements.segmentMeta.textContent = 'All rounds done';
+    ctx.elements.segmentMeta.textContent = '';
+    ctx.elements.segmentMeta.style.display = 'none';
     playCompleteTone(ctx);
     return;
   }
