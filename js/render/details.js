@@ -33,7 +33,7 @@ export function renderDetailsView(ctx, sessionIndex, { showStartButton = false }
       <span class="badge">Total about ${timings.totalLabel}</span>
       ${state.progress.dayState !== 'standard' ? `<span class="badge">${getDayStateLabel(state.progress.dayState)}</span>` : ''}
     </div>
-    <div class="small subtle" style="margin-top:8px;">${session.note || ''}</div>
+    <div class="small subtle" style="margin-top:10px;">${session.note || ''}</div>
   `;
 
   els.detailsFocus.textContent = workout.coachingFocus;
@@ -46,5 +46,10 @@ export function renderDetailsView(ctx, sessionIndex, { showStartButton = false }
   els.detailsSubsJoint.innerHTML = workout.substitutions.joint.map(item => `<li>${item}</li>`).join('');
 
   els.detailsStartBtn.style.display = showStartButton ? 'inline-flex' : 'none';
+
+  els.detailsOverlay.querySelectorAll('.accordion-card').forEach(card => {
+    card.open = false;
+  });
+
   return true;
 }
