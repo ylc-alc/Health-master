@@ -394,6 +394,13 @@
     width: 100%;
   }
 
+  /* Do not let header action buttons stretch full width on mobile */
+  .player-header .btn,
+  .player-header .btn.secondary,
+  .player-header .btn.ghost {
+    width: auto;
+  }
+
   .btn-row {
     width: 100%;
   }
