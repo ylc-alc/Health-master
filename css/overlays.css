@@ -45,7 +45,9 @@
   flex: 1 1 0;
   min-height: 0;
   overflow-y: auto;
-  padding: 26px 0 12px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 20px 0 12px;
 }
 
 .player-body-inner {
@@ -185,8 +187,8 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding-top: 14px;
-  overflow-y: auto;
+  width: 100%;
+  padding: 2px 0 2px;
 }
 
 .accordion-card {
@@ -208,14 +210,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 64px;
   padding: 16px 18px;
   font-weight: 900;
   color: var(--text);
   letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .accordion-card summary::-webkit-details-marker {
   display: none;
+}
+
+.accordion-card summary > span:first-child {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .accordion-chevron {
@@ -241,6 +251,14 @@
 }
 
 /* Prestart */
+
+.prestart-grid {
+  display: grid;
+  grid-template-columns: 1.04fr 0.96fr;
+  gap: 14px;
+  width: 100%;
+  align-content: start;
+}
 
 .prestart-box {
   border: 1px solid rgba(5, 150, 105, 0.10);
@@ -330,6 +348,10 @@
 }
 
 @media (max-width: 960px) {
+  .prestart-grid {
+    grid-template-columns: 1fr;
+  }
+
   .prestart-stat-grid {
     grid-template-columns: 1fr;
   }
