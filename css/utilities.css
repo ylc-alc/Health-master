@@ -1,7 +1,14 @@
-.subtle { color: var(--muted); }
-.small { font-size: 13px; }
+.subtle {
+  color: var(--muted);
+}
 
-.list {
+.small {
+  font-size: 13px;
+}
+
+.list,
+.detail-list,
+.prestart-list {
   margin: 0;
   padding-left: 18px;
 }
@@ -9,10 +16,17 @@
 .list li,
 .detail-list li,
 .prestart-list li {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .section-mini-title {
-  font-weight: 700;
-  margin-bottom: 4px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.player-header-copy,
+.player-header-actions,
+.current-title > div {
+  min-width: 0;
 }
