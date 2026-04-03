@@ -9,6 +9,7 @@ export const state = {
   audioCtx: null,
   audioEnabled: true,
   preparedSessionIndex: null,
+  detailsReturnTarget: null,
   dom: {}
 };
 
