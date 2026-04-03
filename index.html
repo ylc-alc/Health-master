@@ -146,58 +146,111 @@
   </div>
 
   <div class="player-overlay" id="detailsOverlay">
-    <div class="player">
-      <div class="player-header player-header-details">
-        <div class="player-header-copy">
-          <div class="phase">Session details</div>
-          <h2 id="detailsTitle" style="margin-bottom:4px;">Workout details</h2>
-          <div class="subtle" id="detailsMeta"></div>
-        </div>
-        <div class="player-header-actions">
-          <button class="btn" id="detailsStartBtn" style="display:none;text-transform:uppercase;letter-spacing:0.04em;font-weight:900;padding:11px 22px;">Start Now</button>
-          <button class="btn secondary" id="closeDetailsBtn" style="padding:11px 18px;">Close</button>
-        </div>
+  <div class="player">
+    <div class="player-header player-header-details">
+      <div class="player-header-copy">
+        <div class="phase">Session details</div>
+        <h2 id="detailsTitle" style="margin-bottom:4px;">Workout details</h2>
+        <div class="subtle" id="detailsMeta"></div>
       </div>
+      <div class="player-header-actions">
+        <button class="btn" id="detailsStartBtn" style="display:none;text-transform:uppercase;letter-spacing:0.04em;font-weight:900;padding:11px 22px;">Start Now</button>
+        <button class="btn secondary" id="closeDetailsBtn" style="padding:11px 18px;">Close</button>
+      </div>
+    </div>
 
-      <div class="detail-grid">
-        <div class="detail-box">
-          <h3>Session design</h3>
+    <div class="details-stack">
+      <details class="accordion-card">
+        <summary>
+          <span>Session design</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
           <div id="detailsDesign" class="small"></div>
+        </div>
+      </details>
 
-          <h3 style="margin-top:16px;">Coaching focus</h3>
+      <details class="accordion-card">
+        <summary>
+          <span>Coaching focus</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
           <div id="detailsFocus" class="small subtle"></div>
+        </div>
+      </details>
 
-          <h3 style="margin-top:16px;">Progression aim</h3>
+      <details class="accordion-card">
+        <summary>
+          <span>Progression aim</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
           <ul id="detailsProgression" class="detail-list small"></ul>
+        </div>
+      </details>
 
-          <h3 style="margin-top:16px;">Smart substitutions</h3>
+      <details class="accordion-card">
+        <summary>
+          <span>Smart substitutions</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
           <div class="mini-grid">
-            <div>
+            <div class="detail-subgroup">
               <div class="small section-mini-title">Low-energy day</div>
               <ul id="detailsSubsEnergy" class="detail-list small"></ul>
             </div>
-            <div>
+            <div class="detail-subgroup">
               <div class="small section-mini-title">Joint-friendly swaps</div>
               <ul id="detailsSubsJoint" class="detail-list small"></ul>
             </div>
           </div>
         </div>
+      </details>
 
-        <div class="detail-box">
-          <h3>Warm-up</h3>
+      <details class="accordion-card">
+        <summary>
+          <span>Warm-up</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
           <ul id="detailsWarmup" class="detail-list small"></ul>
-
-          <h3 style="margin-top:16px;">Main block exercises</h3>
-          <ol id="detailsExercises" class="detail-list small"></ol>
-
-          <h3 style="margin-top:16px;">Cool-down</h3>
-          <ul id="detailsCooldown" class="detail-list small"></ul>
-
-          <div id="detailsEasier" class="callout small subtle" style="margin-top:16px;"></div>
         </div>
-      </div>
+      </details>
+
+      <details class="accordion-card">
+        <summary>
+          <span>Main block exercises</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
+          <ol id="detailsExercises" class="detail-list small"></ol>
+        </div>
+      </details>
+
+      <details class="accordion-card">
+        <summary>
+          <span>Cool-down</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
+          <ul id="detailsCooldown" class="detail-list small"></ul>
+        </div>
+      </details>
+
+      <details class="accordion-card">
+        <summary>
+          <span>Easier mode note</span>
+          <span class="accordion-chevron">⌄</span>
+        </summary>
+        <div class="accordion-content">
+          <div id="detailsEasier" class="callout small subtle" style="margin-top:0;"></div>
+        </div>
+      </details>
     </div>
   </div>
+</div>
 
   <div class="player-overlay" id="prestartOverlay">
     <div class="player">
