@@ -3,22 +3,277 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A personalised 4-week home workout planner. 4 days per week, mat and one 1.5 kg dumbbell. Tracks progress in the browser with no account needed." />
+  <meta name="theme-color" content="#e4572e" />
+  <meta property="og:title" content="Personalised 4-Week Workout Planner" />
+  <meta property="og:description" content="Home workouts with a mat and one 1.5 kg dumbbell. 4 weeks, 4 days per week, with progress tracking." />
   <title>Personalised 4-Week Workout Planner</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="./css/tokens.css" />
   <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/utilities.css" />
   <link rel="stylesheet" href="./css/layout.css" />
   <link rel="stylesheet" href="./css/components.css" />
   <link rel="stylesheet" href="./css/planner.css" />
   <link rel="stylesheet" href="./css/overlays.css" />
-  <link rel="stylesheet" href="./css/utilities.css" />
 </head>
 <body>
-  <!-- existing shell and overlay markup here -->
+  <div class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1>4-Week Personalised Workout Planner</h1>
+          <p class="subtle">
+            Built for a mat, one 1.5 kg dumbbell, and short home sessions. Each workout follows a fixed weekly sequence,
+            with the main block designed for about 25 to 30 minutes. Warm-up and cool-down sit outside that main block.
+          </p>
+          <div>
+            <span class="pill">4 weeks</span>
+            <span class="pill">4 training days per week</span>
+            <span class="pill">Main block 25 to 30 min</span>
+            <span class="pill">No bench or chair needed</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Programme rules</h3>
+          <ul class="list small">
+            <li>Use the single <strong>Start workout</strong> button in the next workout card.</li>
+            <li>The planner shows one week at a time to keep the page lighter.</li>
+            <li>Future days stay locked until the current session is completed.</li>
+            <li>The programme moves by sequence, not by calendar date, so missed days do not break it.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="top-grid">
+      <section class="card" id="currentCard"></section>
+
+      <section class="card">
+        <h3>Progress</h3>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="doneCount">0</div>
+            <div class="subtle">Workouts completed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="remainingCount">16</div>
+            <div class="subtle">Workouts remaining</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="weekCount">1</div>
+            <div class="subtle">Visible week</div>
+          </div>
+        </div>
+
+        <div class="footer-controls" style="margin-top:16px;">
+          <button class="btn secondary" id="resetPlanBtn">Reset programme</button>
+        </div>
+
+        <div class="settings-card">
+          <div>
+            <h4 style="margin-bottom:6px;">Training mode</h4>
+            <div class="subtle small">
+              Standard mode keeps the full progression. Easier mode reduces density. You can also choose a lighter
+              day-state for low energy or joint-sensitive days.
+            </div>
+          </div>
+          <label class="switch" for="easierModeToggle">
+            <input type="checkbox" id="easierModeToggle">
+            <span class="slider"></span>
+            <span>Easier mode</span>
+          </label>
+        </div>
+
+        <div class="settings-card" style="margin-top:12px;">
+          <div>
+            <h4 style="margin-bottom:6px;">Today's adjustment</h4>
+            <div class="subtle small">Choose a lighter day-state without changing the programme sequence.</div>
+          </div>
+          <div>
+            <select id="dayStateSelect" class="compact-select">
+              <option value="standard">Standard day</option>
+              <option value="low_energy">Low energy day</option>
+              <option value="joint_friendly">Joint-friendly day</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <div>
+            <h4 style="margin-bottom:6px;">Audio cues</h4>
+            <div class="subtle small">
+              Plays a soft beep on each segment transition and a countdown for the last 3 seconds of every block.
+            </div>
+          </div>
+          <label class="switch" for="audioToggle">
+            <input type="checkbox" id="audioToggle" checked>
+            <span class="slider"></span>
+            <span>Sound on</span>
+          </label>
+        </div>
+
+        <div class="data-actions">
+          <button class="btn secondary" id="exportBtn">Export progress</button>
+          <label class="import-label" for="importFileInput">
+            Import progress
+            <input type="file" id="importFileInput" accept=".json">
+          </label>
+        </div>
+
+        <div class="admin-note" id="modeNote">Progress and settings are stored only in this browser using local storage.</div>
+        <div style="margin-top:8px;">
+          <span class="wakelock-badge" id="wakelockBadge">
+            <span class="wakelock-dot"></span>
+            Screen awake
+          </span>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="planner-header">
+        <div>
+          <h2 style="margin-bottom:4px;" id="plannerTitle">Week 1 planner</h2>
+          <p class="subtle" style="margin-bottom:0;">
+            Only the current week is shown. Completed sessions get a tick. Locked sessions cannot be opened early.
+          </p>
+          <div class="planner-scroll-note">Swipe left to right to see all four days on mobile.</div>
+        </div>
+      </div>
+      <div class="planner-row" id="planner"></div>
+    </section>
+  </div>
+
+  <div class="player-overlay" id="detailsOverlay">
+    <div class="player">
+      <div class="player-header player-header-details">
+        <div class="player-header-copy">
+          <div class="phase">Session details</div>
+          <h2 id="detailsTitle" style="margin-bottom:4px;">Workout details</h2>
+          <div class="subtle" id="detailsMeta"></div>
+        </div>
+        <div class="player-header-actions">
+          <button class="btn" id="detailsStartBtn" style="display:none;text-transform:uppercase;letter-spacing:0.04em;font-weight:900;padding:11px 22px;">Start Now</button>
+          <button class="btn secondary" id="closeDetailsBtn" style="padding:11px 18px;">Close</button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="detail-box">
+          <h3>Session design</h3>
+          <div id="detailsDesign" class="small"></div>
+
+          <h3 style="margin-top:16px;">Coaching focus</h3>
+          <div id="detailsFocus" class="small subtle"></div>
+
+          <h3 style="margin-top:16px;">Progression aim</h3>
+          <ul id="detailsProgression" class="detail-list small"></ul>
+
+          <h3 style="margin-top:16px;">Smart substitutions</h3>
+          <div class="mini-grid">
+            <div>
+              <div class="small section-mini-title">Low-energy day</div>
+              <ul id="detailsSubsEnergy" class="detail-list small"></ul>
+            </div>
+            <div>
+              <div class="small section-mini-title">Joint-friendly swaps</div>
+              <ul id="detailsSubsJoint" class="detail-list small"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-box">
+          <h3>Warm-up</h3>
+          <ul id="detailsWarmup" class="detail-list small"></ul>
+
+          <h3 style="margin-top:16px;">Main block exercises</h3>
+          <ol id="detailsExercises" class="detail-list small"></ol>
+
+          <h3 style="margin-top:16px;">Cool-down</h3>
+          <ul id="detailsCooldown" class="detail-list small"></ul>
+
+          <div id="detailsEasier" class="callout small subtle" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="player-overlay" id="prestartOverlay">
+    <div class="player">
+      <div class="player-header player-header-prestart">
+        <div>
+          <div class="phase">Ready to train</div>
+          <h2 id="prestartTitle" style="margin-bottom:4px;">Today's workout</h2>
+          <div class="subtle" id="prestartMeta"></div>
+        </div>
+        <button class="btn secondary" id="closePrestartBtn">Close</button>
+      </div>
+
+      <div class="prestart-grid">
+        <div class="prestart-box">
+          <h3 style="margin-bottom:8px;">Session summary</h3>
+          <div id="prestartSummary" class="small"></div>
+          <div id="prestartAdjustment" class="callout small subtle"></div>
+          <div class="prestart-actions">
+            <button class="btn" id="beginWorkoutBtn">Start now</button>
+            <button class="btn secondary" id="prestartDetailsBtn">View full details</button>
+          </div>
+        </div>
+
+        <div class="prestart-box">
+          <h3 style="margin-bottom:8px;">Main set preview</h3>
+          <ol id="prestartPreview" class="prestart-list small"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="player-overlay" id="playerOverlay">
+    <div class="player">
+      <div class="player-header player-header-live">
+        <div style="min-width:0;">
+          <div class="phase" id="playerPhaseLabel">Warm-up</div>
+          <div class="player-workout-title" id="playerWorkoutTitle">Workout title</div>
+        </div>
+        <button class="btn secondary" id="closePlayerBtn" style="flex-shrink:0;padding:8px 14px;font-size:13px;min-height:36px;">Close</button>
+      </div>
+
+      <div class="player-body" id="playerMain">
+        <div class="player-body-inner">
+          <div class="timer" id="timerText">00:40</div>
+          <div class="exercise-name" id="exerciseName">Exercise</div>
+          <div class="subtle player-cue" id="exerciseCue">Cue</div>
+          <div class="progressbar"><div id="phaseProgress"></div></div>
+          <div class="small subtle player-round-meta" id="segmentMeta">Round 1 of 4</div>
+          <div class="next-up-box" id="nextUpBox" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="player-footer-sticky" id="playerFooterSticky">
+        <div class="footer-controls">
+          <button class="btn" id="playPauseBtn">Start</button>
+          <button class="btn secondary" id="skipBtn">Skip</button>
+          <button class="btn secondary" id="completeBtn">Mark workout complete</button>
+        </div>
+      </div>
+
+      <div class="completion-box" id="completionBox" style="display:none;">
+        <div class="phase">Workout completed</div>
+        <h2 id="completionTitle" style="margin-bottom:6px;">Nice work</h2>
+        <p class="subtle" id="completionText" style="margin-bottom:10px;">Your session has been logged.</p>
+        <div class="callout small" id="completionNext"></div>
+        <div class="player-footer-sticky">
+          <div class="footer-controls">
+            <button class="btn" id="closeCompletionBtn">Close and continue</button>
+            <button class="btn secondary" id="repeatSessionBtn">Repeat this session</button>
+            <button class="btn ghost" id="completionEasierBtn">Turn easier mode on</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>
