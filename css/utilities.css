@@ -1,1 +1,18 @@
+.subtle { color: var(--muted); }
+.small { font-size: 13px; }
 
+.list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.list li,
+.detail-list li,
+.prestart-list li {
+  margin-bottom: 6px;
+}
+
+.section-mini-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
